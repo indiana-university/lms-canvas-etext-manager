@@ -1,4 +1,4 @@
-package edu.iu.uits.lms.microservicestemplate.config;
+package edu.iu.uits.lms.etextmanager.config;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
@@ -18,39 +18,39 @@ import javax.sql.DataSource;
 import java.util.HashMap;
 import java.util.Map;
 
-@Configuration("microservicesTemplateDbConfig")
+@Configuration("etextmanagerDbConfig")
 @EnableJpaRepositories(
-        entityManagerFactoryRef = "microservicesTemplateEntityMgrFactory",
-        transactionManagerRef = "microservicesTemplateTransactionMgr",
-        basePackages = {"edu.iu.uits.lms.microservicestemplate.repository"})
+        entityManagerFactoryRef = "etextmanagerEntityMgrFactory",
+        transactionManagerRef = "etextmanagerTransactionMgr",
+        basePackages = {"edu.iu.uits.lms.etextmanager.repository"})
 @EnableTransactionManagement
 public class PostgresDBConfig {
 
     @Primary
-    @Bean(name = "microservicesTemplateDataSource")
+    @Bean(name = "etextmanagerDataSource")
     @ConfigurationProperties(prefix = "spring.datasource")
     public DataSource dataSource(DataSourceProperties properties) {
         return properties.initializeDataSourceBuilder().build();
     }
 
-    @Bean(name = "microservicesTemplateEntityMgrFactory")
+    @Bean(name = "etextmanagerEntityMgrFactory")
     @Primary
-    public LocalContainerEntityManagerFactoryBean microservicesTemplateEntityMgrFactory(
+    public LocalContainerEntityManagerFactoryBean etextmanagerEntityMgrFactory(
             final EntityManagerFactoryBuilder builder,
-            @Qualifier("microservicesTemplateDataSource") final DataSource dataSource) {
+            @Qualifier("etextmanagerDataSource") final DataSource dataSource) {
         // dynamically setting up the hibernate properties for each of the datasource.
         final Map<String, String> properties = new HashMap<>();
         return builder
                 .dataSource(dataSource)
                 .properties(properties)
-                .packages("edu.iu.uits.lms.microservicestemplate.model")
+                .packages("edu.iu.uits.lms.etextmanager.model")
                 .build();
     }
 
-    @Bean(name = "microservicesTemplateTransactionMgr")
+    @Bean(name = "etextmanagerTransactionMgr")
     @Primary
-    public PlatformTransactionManager microservicesTemplateTransactionMgr(
-            @Qualifier("microservicesTemplateEntityMgrFactory") final EntityManagerFactory entityManagerFactory) {
+    public PlatformTransactionManager etextmanagerTransactionMgr(
+            @Qualifier("etextmanagerEntityMgrFactory") final EntityManagerFactory entityManagerFactory) {
         return new JpaTransactionManager(entityManagerFactory);
     }
 }

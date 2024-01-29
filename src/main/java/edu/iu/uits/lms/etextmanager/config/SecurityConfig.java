@@ -1,8 +1,6 @@
-package edu.iu.uits.lms.microservicestemplate.config;
+package edu.iu.uits.lms.etextmanager.config;
 
 import edu.iu.uits.lms.common.it12logging.LmsFilterSecurityInterceptorObjectPostProcessor;
-import edu.iu.uits.lms.common.it12logging.RestSecurityLoggingConfig;
-import edu.iu.uits.lms.common.oauth.CustomJwtAuthenticationConverter;
 import edu.iu.uits.lms.lti.service.LmsDefaultGrantedAuthoritiesMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.SecurityProperties;
@@ -11,7 +9,6 @@ import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 import uk.ac.ox.ctl.lti13.Lti13Configurer;
 
@@ -20,30 +17,6 @@ import static edu.iu.uits.lms.lti.LTIConstants.WELL_KNOWN_ALL;
 
 @Configuration
 public class SecurityConfig {
-
-    @Configuration
-    @Order(SecurityProperties.BASIC_AUTH_ORDER - 5)
-    public static class RestSecurityConfigurationAdapter extends WebSecurityConfigurerAdapter {
-
-        @Override
-        public void configure(HttpSecurity http) throws Exception {
-            http.cors().and()
-                    .requestMatchers().antMatchers("/rest/**", "/api/**")
-                    .and()
-                    .authorizeRequests()
-                    // In order to allow CORS preflight requests to succeed, we need to allow OPTIONS requests to the token endpoint
-                    .antMatchers("/rest/**")
-                    .access("hasAuthority('SCOPE_lms:rest') and hasAuthority('ROLE_LMS_REST_ADMINS')")
-                    .antMatchers("/api/**").permitAll()
-                    .and()
-                    .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                    .and()
-                    .oauth2ResourceServer()
-                    .jwt().jwtAuthenticationConverter(new CustomJwtAuthenticationConverter());
-
-            http.apply(new RestSecurityLoggingConfig());
-        }
-    }
 
     @Configuration
     @Order(SecurityProperties.BASIC_AUTH_ORDER - 4)
@@ -68,6 +41,7 @@ public class SecurityConfig {
                     .and()
                     .referrerPolicy(referrer -> referrer
                             .policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.SAME_ORIGIN));
+
 
             //Setup the LTI handshake
             Lti13Configurer lti13Configurer = new Lti13Configurer()
@@ -97,7 +71,6 @@ public class SecurityConfig {
 
     }
 
-
     @Configuration
     @Order(SecurityProperties.BASIC_AUTH_ORDER - 2)
     public static class CatchAllSecurityConfig extends WebSecurityConfigurerAdapter {
@@ -107,7 +80,14 @@ public class SecurityConfig {
             http.requestMatchers().antMatchers("/**")
                     .and()
                     .authorizeRequests()
-                    .anyRequest().authenticated();
+                    .anyRequest().authenticated()
+                    .withObjectPostProcessor(new LmsFilterSecurityInterceptorObjectPostProcessor())
+                    .and()
+                    .headers()
+                    .contentSecurityPolicy("style-src 'self' 'unsafe-inline'; form-action 'self'; frame-ancestors 'self' https://*.instructure.com")
+                    .and()
+                    .referrerPolicy(referrer -> referrer
+                            .policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.SAME_ORIGIN));
         }
     }
 }

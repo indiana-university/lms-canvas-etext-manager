@@ -1,6 +1,6 @@
 spring:
   application:
-    name: microservices-template
+    name: etext-manager
   session:
     store-type: none
   config.import: optional:${app.fullFilePath}/${app.overridesFileName}, optional:${app.fullFilePath}/security.properties, classpath:canvas.properties, optional:classpath:git.properties, classpath:lti-registrations.properties,optional:classpath:denodo.properties
@@ -29,7 +29,7 @@ spring:
     password: ${lms.db.password}
     type: ${lms.db.poolType}
   cloud.vault.enabled: false
-microservices-template:
+etext-manager:
   version: @app.version@
   env: ${app.env}
 
@@ -58,9 +58,8 @@ spring:
   config.activate.on-profile: redis-session
   session:
     store-type: redis
-    redis.namespace: microservices-template-@app.version@:session
+    redis.namespace: etext-manager-@app.version@:session
 management.health.redis.enabled: true
-
 ---
 
 spring:
@@ -76,7 +75,7 @@ spring:
     kv:
       enabled: true
       backend: ua-vpit/enterprise-systems/lms/kv
-      application-name: microservicestemplate
+      application-name: etext-manager
 
 ---
 
@@ -88,7 +87,7 @@ springdoc:
     enabled: true
     path: /api/v3/api-docs
   cache.disabled: true
-  packagesToScan: edu.iu.uits.lms.microservicestemplate.controller.rest
+  packagesToScan: edu.iu.uits.lms.etextmanager.controller.rest
   swagger-ui:
     enabled: false
     disable-swagger-default-url: true
