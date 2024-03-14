@@ -335,6 +335,7 @@
                 </configuration>
             </plugin>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>${plugins.compiler.version}</version>
                 <configuration>
@@ -352,9 +353,9 @@
                     <failOnNotUptodateHeader>true</failOnNotUptodateHeader>
                     <excludes>
                         <exclude>**/env.properties</exclude>
-                        <exclude>**/messages.properties</exclude>
-                        <exclude>**/application-etextmanager.properties</exclude>
-                        <exclude>**/etextmanager.sql</exclude>
+                        <exclude>**/etextmanager.properties</exclude>
+                        <exclude>**/application-etext.properties</exclude>
+                        <exclude>**/etext.sql</exclude>
                     </excludes>
                 </configuration>
             </plugin>
