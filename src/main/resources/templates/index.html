@@ -9,6 +9,17 @@
 </head>
 <body>
 <div layout:fragment="content">
+    <div th:if="${uploadSuccess}" class="rvt-alert rvt-alert--success [ rvt-m-top-md ]" role="alert" aria-labelledby="success-alert-title" data-rvt-alert="success">
+        <div class="rvt-alert__title" id="success-alert-title">File is being processed!</div>
+        <p class="rvt-alert__message">The file is being processed. Summary email will be sent at a later time.</p>
+        <button type="button" class="rvt-alert__dismiss" data-rvt-alert-close>
+            <span class="rvt-sr-only">Close</span>
+            <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+                <path fill="currentColor" d="M9.41,8l5.29-5.29a1,1,0,0,0-1.41-1.41L8,6.59,2.71,1.29A1,1,0,0,0,1.29,2.71L6.59,8,1.29,13.29a1,1,0,1,0,1.41,1.41L8,9.41l5.29,5.29a1,1,0,0,0,1.41-1.41Z"/>
+            </svg>
+        </button>
+    </div>
+
     <div class="rvt-p-tb-md">
         <h1 id="tool-title" class="rvt-ts-36">eText Manager</h1>
     </div>
@@ -19,7 +30,7 @@
             <button class="rvt-tabs__tab" data-rvt-tab>View Report</button>
             <button class="rvt-tabs__tab" data-rvt-tab>Tool Info</button>
         </div>
-        <div class="rvt-tabs__panel" data-rvt-tab-panel data-rvt-tab-init>
+        <div id="upload-panel" class="rvt-tabs__panel" data-rvt-tab-panel data-rvt-tab-init>
             <span class="rvt-ts-23 rvt-text-bold">Upload a CSV</span>
             <p>
                 Use the header listed below. You do not need to fill in every column with data, depending on the type of
@@ -30,23 +41,23 @@
                     <dd>Tool, New Name, SIS Course ID, Pressbook Title, Pressbook Link</dd>
                 </dl>
             </p>
-            <form>
-                <div class="rvt-inline-alert rvt-inline-alert--standalone rvt-inline-alert--danger rvt-m-bottom-sm">
+            <form id="uploadForm" th:action="@{/app/upload}" method="post" enctype="multipart/form-data">
+                <div th:if="${fileErrors}" class="rvt-inline-alert rvt-inline-alert--standalone rvt-inline-alert--danger rvt-m-bottom-sm">
                         <span class="rvt-inline-alert__icon">
                             <svg fill="currentColor" width="16" height="16" viewBox="0 0 16 16"><path d="m8 6.586-2-2L4.586 6l2 2-2 2L6 11.414l2-2 2 2L11.414 10l-2-2 2-2L10 4.586l-2 2Z"></path><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0ZM2 8a6 6 0 1 1 12 0A6 6 0 0 1 2 8Z"></path></svg>
                         </span>
                     <span class="rvt-inline-alert__message" id="bad-csv-header-message">The CSV header was not recognized. Check the file to make sure it has a supported header.</span>
                 </div>
                 <fieldset class="rvt-fieldset">
-                    <legend class="rvt-m-bottom-sm">CSV File Upload</legend>
+                    <legend class="rvt-m-bottom-sm">CSV File Uploads</legend>
                     <div class="rvt-file" data-rvt-file-input="csv-file-input">
-                        <input type="file" data-rvt-file-input-button="csv-file-input" id="csv-file-input" aria-describedby="csv-file-description" required>
+                        <input type="file" data-rvt-file-input-button="csv-file-input" id="csv-file-input" name="csv-file-input" aria-describedby="csv-file-description" required multiple>
                         <label for="csv-file-input" class="rvt-button rvt-button--secondary">
-                            <span>Upload CSV</span>
+                            <span>Upload CSVs</span>
                             <svg fill="currentColor" width="16" height="16" viewBox="0 0 16 16"><path d="M2 1h8.414L14 4.586V15H2V1Zm2 2v10h8V7.5H7.5V3H4Zm5.5 0v2.5H12v-.086L9.586 3H9.5Z"></path></svg>
                         </label>
                         <div class="rvt-file__preview" data-rvt-file-input-preview="csv-file-input" id="csv-file-description">
-                            No file selected
+                            No files selected
                         </div>
                     </div>
                 </fieldset>
@@ -55,139 +66,21 @@
                 </div>
             </form>
         </div>
-        <div class="rvt-tabs__panel" data-rvt-tab-panel>
-            <div class="rvt-button-group rvt-m-bottom-md">
-                <span class="rvt-ts-23 rvt-text-bold">View report</span>
-                <button class="rvt-button">Download Report</button>
+        <div id="report-panel" class="rvt-tabs__panel" data-rvt-tab-panel th:attr="data-urlbase=@{/app/reports}" data-inner-div-id="#reportsDiv">
+            <div id="reports-loader" class="rvt-display-none">
+                <div class="rvt-flex rvt-justify-center">
+                    <div class="rvt-loader rvt-loader--lg" aria-label="Content loading"></div>
+                </div>
             </div>
-            <table id="appTable" class="rvt-table-stripes full-table-width">
-                <caption class="rvt-sr-only">Table with reports of various uploads</caption>
-                <thead>
-                <tr>
-                    <th scope="col">Uploader</th>
-                    <th scope="col">Date</th>
-                    <th scope="col">Tool</th>
-                    <th scope="col">Tool ID</th>
-                    <th scope="col">SIS Course ID</th>
-                    <th scope="col">Canvas Course ID</th>
-                    <th scope="col" class="small-column-width">Deployment ID</th>
-                </tr>
-                <tr>
-                    <th>Uploader</th>
-                    <th>Date</th>
-                    <th>Tool</th>
-                    <th></th>
-                    <th>SIS Course ID</th>
-                    <th></th>
-                    <th></th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr>
-                    <th scope="row">kibayash</th>
-                    <td>2024-01-14</td>
-                    <td>Kritik</td>
-                    <td>458050</td>
-                    <td>FA23-BL-COLL-C103-5621</td>
-                    <td>2165416</td>
-                    <td>458050:e6e723abdeb5a64d7b8163b045c8259372e42f02</td>
-                </tr>
-                <tr>
-                    <th scope="row">gjthomas</th>
-                    <td>2023-12-20</td>
-                    <td>Cool LTI Tool</td>
-                    <td>638346</td>
-                    <td>SP24-IN-UITS-A123-4321</td>
-                    <td>8694505</td>
-                    <td>638346:f6e723abdeb5a64d7b8163b045c8259372e42f02</td>
-                </tr>
-                <tr>
-                    <th scope="row">agschmid</th>
-                    <td>2024-01-18</td>
-                    <td>Test Tool</td>
-                    <td>123456</td>
-                    <td>FA23-CO-CHEM-B333-8647</td>
-                    <td>1234567</td>
-                    <td>123456:g6e723abdeb5a64d7b8163b045c8259372e42f02</td>
-                </tr>
-                <tr>
-                    <th scope="row">kibayash</th>
-                    <td>2024-01-14</td>
-                    <td>Kritik</td>
-                    <td>458051</td>
-                    <td>FA23-BL-COLL-C103-5622</td>
-                    <td>2165417</td>
-                    <td>458051:z6e723abdeb5a64d7b8163b045c8259372e42f02</td>
-                </tr>
-                <tr>
-                    <th scope="row">kibayash</th>
-                    <td>2024-01-14</td>
-                    <td>Kritik</td>
-                    <td>458052</td>
-                    <td>FA23-BL-COLL-C103-5623</td>
-                    <td>2165418</td>
-                    <td>458052:x6e723abdeb5a64d7b8163b045c8259372e42f02</td>
-                </tr>
-                </tbody>
-            </table>
+            <div id="reportsDiv"></div>
         </div>
-        <div class="rvt-tabs__panel" data-rvt-tab-panel>
-            <span class="rvt-ts-23 rvt-text-bold">Tool information</span>
-            <p>
-                Note: If a row has a full, numeric value in the Client/Tab ID column, then it is a Client ID. Anything else should be considered a Tab ID.
-            </p>
-            <table id="toolInfoTable" class="rvt-table-stripes full-table-width">
-                <caption class="rvt-sr-only">Tool information table</caption>
-                <thead>
-                <tr>
-                    <th scope="col">Tool</th>
-                    <th scope="col" class="small-column-width">Client/Tab ID</th>
-                    <th scope="col">JSON</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr>
-                    <th scope="row">Kritik</th>
-                    <td>290000000000704</td>
-                    <td>
-                        <!-- can do something with JSON.stringify() to get a more proper json display -->
-                        "{
-                        ""name"": ""{{newToolName}}"",
-                        ""course_navigation"": {
-                        ""enabled"": true,
-                        ""placement"": ""course_navigation"",
-                        ""label"": ""Kritik-USA"",
-                        ""text"": ""Kritik-USA""
-                        }
-                        }"
-                    </td>
-                </tr>
-                <tr>
-                    <th scope="row">Vista Higher Learning</th>
-                    <td>290000000000628</td>
-                    <td>
-                        "{
-                        ""name"": ""{{newToolName}}"",
-                        ""course_navigation"": {
-                        ""text"": ""Vista Higher Learning"",
-                        ""label"": ""Vista Higher Learning"",
-                        ""enabled"": true,
-                        ""default"": ""enabled""
-                        }
-                        }"
-                    </td>
-                </tr>
-                <tr>
-                    <th scope="row">Access Pearson</th>
-                    <td>context_external_tool_464010</td>
-                    <td>
-                        "{
-                        ""hidden"": false
-                        }"
-                    </td>
-                </tr>
-                </tbody>
-            </table>
+        <div id="config-panel" class="rvt-tabs__panel" data-rvt-tab-panel th:attr="data-urlbase=@{/app/toolConfigs}" data-inner-div-id="#toolConfigDiv">
+            <div id="config-loader" class="rvt-display-none">
+                <div class="rvt-flex rvt-justify-center">
+                    <div class="rvt-loader rvt-loader--lg" aria-label="Content loading"></div>
+                </div>
+            </div>
+            <div id="toolConfigDiv"></div>
         </div>
     </div>
 
@@ -195,51 +88,7 @@
 <th:block layout:fragment="script">
     <script th:inline="javascript">
     $(document).ready(function () {
-        $('#appTable').DataTable({
-            orderCellsTop: true,
-            initComplete: function () {
-                this.api()
-                .columns( [0, 2, 4] )
-                .every(function () {
-                    var column = this;
-                    var select = $('<select class="rvt-select"><option value="">All</option></select>')
-                        .appendTo($("#appTable thead tr:eq(1) th").eq(column.index()).empty())
-                        .on('change', function () {
-                            var val = $.fn.dataTable.util.escapeRegex($(this).val());
-                            column.search(val ? '^' + val + '$' : '', true, false).draw();
-                        })
-                        .on( 'click' , function (evt) {
-                            evt.stopPropagation();
-                        });
 
-                    column
-                        .data()
-                        .unique()
-                        .sort()
-                        .each(function (d, j) {
-                            select.append('<option value="' + d + '">' + d + '</option>');
-                        });
-                });
-
-                this.api()
-                .columns( [1] )
-                .every(function () {
-                    let column = this;
-                    var textinput = $('<input type="text" class="rvt-text-input" placeholder="Date">')
-                        .appendTo($("#appTable thead tr:eq(1) th").eq(column.index()).empty())
-                        .on('keyup', function () {
-                            var val = $.fn.dataTable.util.escapeRegex($(this).val());
-                                column.search(val).draw();
-                        });
-                })
-            }
-        });
-        var table = $('#appTable').DataTable();
-        table.columns.adjust().draw();
-
-        $('#toolInfoTable').DataTable({});
-        var tooltable = $('#toolInfoTable').DataTable();
-        tooltable.columns.adjust().draw();
     });
 
 </script>

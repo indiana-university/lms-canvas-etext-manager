@@ -3,7 +3,7 @@ spring:
     name: etext-manager
   session:
     store-type: none
-  config.import: optional:${app.fullFilePath}/${app.overridesFileName}, optional:${app.fullFilePath}/security.properties, classpath:canvas.properties, optional:classpath:git.properties, classpath:lti-registrations.properties,optional:classpath:denodo.properties
+  config.import: optional:${app.fullFilePath}/${app.overridesFileName}, optional:${app.fullFilePath}/security.properties, classpath:canvas.properties, optional:classpath:git.properties, classpath:lti-registrations.properties,optional:classpath:email.properties
   security:
     oauth2:
       resourceserver:
@@ -29,9 +29,29 @@ spring:
     password: ${lms.db.password}
     type: ${lms.db.poolType}
   cloud.vault.enabled: false
-etext-manager:
+  data.rest.basePath: /rest
+  rabbitmq:
+    addresses: ${lms.rabbitmq.address.${app.env}}
+    username: ${lms.rabbitmq.username.${app.env}}
+    password: ${lms.rabbitmq.password.${app.env}}
+    virtualHost: ${lms.rabbitmq.virtualHost.${app.env}}
+    listener.simple:
+      acknowledge-mode: manual
+      missing-queues-fatal: false
+      retry:
+        enabled: true
+        initial-interval: 3s
+        max-attempts: 3
+        max-interval: 10s
+        multiplier: 2
+etextmanager:
   version: @app.version@
   env: ${app.env}
+  backgroundQueueName: etext_queue_${lms.rabbitmq.queue_env_suffix}
+  groupCode: ELS
+  defaultEmails: [iu-uits-es-ess-lms-notify@exchange.iu.edu]
+  # toolSecrets will come from Vault
+  toolSecrets: {}
 
 server:
   error:
@@ -75,6 +95,7 @@ spring:
     kv:
       enabled: true
       backend: ua-vpit/enterprise-systems/lms/kv
+      profiles: all, ${app.env}
       application-name: etext-manager
 
 ---

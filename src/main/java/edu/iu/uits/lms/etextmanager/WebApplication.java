@@ -5,13 +5,12 @@ import edu.iu.uits.lms.common.samesite.EnableCookieFilter;
 import edu.iu.uits.lms.common.server.GitRepositoryState;
 import edu.iu.uits.lms.common.server.ServerInfo;
 import edu.iu.uits.lms.common.server.ServerUtils;
-import edu.iu.uits.lms.common.session.EnableCourseSessionService;
-import edu.iu.uits.lms.common.variablereplacement.EnableVariableReplacementService;
+import edu.iu.uits.lms.email.config.EnableEmailClient;
+import edu.iu.uits.lms.etextmanager.config.ToolConfig;
 import edu.iu.uits.lms.iuonly.config.EnableIuOnlyClient;
 import edu.iu.uits.lms.lti.config.EnableGlobalErrorHandler;
 import edu.iu.uits.lms.lti.config.EnableLtiClient;
 import edu.iu.uits.lms.redis.config.EnableRedisConfiguration;
-import edu.iu.uits.lms.etextmanager.config.ToolConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
@@ -26,13 +25,12 @@ import java.util.Date;
 @EnableGlobalErrorHandler
 @Slf4j
 @EnableRedisConfiguration
-@EnableCookieFilter(ignoredRequestPatterns = {"/rest/**", "/app/rest/**"})
+@EnableCookieFilter(ignoredRequestPatterns = {"/rest/**"})
 @EnableLtiClient(toolKeys = {"lms_etext_manager"})
 @EnableCanvasClient
+@EnableEmailClient
 @EnableIuOnlyClient
 @EnableConfigurationProperties(GitRepositoryState.class)
-@EnableCourseSessionService(sessionKey = "etext_manager_course_session")
-@EnableVariableReplacementService
 public class WebApplication {
 
     @Autowired

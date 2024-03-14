@@ -1,21 +1,33 @@
 package edu.iu.uits.lms.etextmanager.config;
 
-import edu.iu.uits.lms.common.session.DualSessionIdResolver;
+import edu.iu.uits.lms.etextmanager.model.ETextCsv;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.support.converter.SimpleMessageConverter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.ResourceBundleMessageSource;
+import org.springframework.data.rest.core.config.RepositoryRestConfiguration;
+import org.springframework.data.rest.core.mapping.RepositoryDetectionStrategy;
+import org.springframework.data.rest.webmvc.config.RepositoryRestConfigurer;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
-import org.springframework.session.web.http.HttpSessionIdResolver;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+import java.util.ArrayList;
+import java.util.HashSet;
 
 @Configuration
 @EnableWebMvc
 @EnableGlobalMethodSecurity(securedEnabled = true, prePostEnabled = true)
 @Slf4j
-public class ApplicationConfig implements WebMvcConfigurer {
+public class ApplicationConfig implements WebMvcConfigurer, RepositoryRestConfigurer {
+
+   @Autowired
+   private ToolConfig toolConfig;
 
    public ApplicationConfig() {
       log.debug("ApplicationConfig()");
@@ -35,16 +47,26 @@ public class ApplicationConfig implements WebMvcConfigurer {
    @Bean
    public ResourceBundleMessageSource messageSource() {
       ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();
-      messageSource.setBasename("bundles/tool-organizer");
+      messageSource.setBasename("bundles/etextmanager");
       return messageSource;
    }
 
-   /**
-    * Uses a custom resolver that either uses an x-auth-token header for the passed request path,
-    * otherwise uses a cookie for tracking the session
-    */
+   @Override
+   public void configureRepositoryRestConfiguration(RepositoryRestConfiguration config, CorsRegistry cors) {
+      RepositoryRestConfigurer.super.configureRepositoryRestConfiguration(config, cors);
+      config.setRepositoryDetectionStrategy(RepositoryDetectionStrategy.RepositoryDetectionStrategies.ANNOTATED);
+   }
+
+   @Bean(name = "backgroundQueue")
+   Queue backgroundQueue() {
+      return new Queue(toolConfig.getBackgroundQueueName());
+   }
+
    @Bean
-   public HttpSessionIdResolver httpSessionIdResolver() {
-      return new DualSessionIdResolver("/app/rest/");
+   public SimpleMessageConverter converter() {
+      SimpleMessageConverter converter = new SimpleMessageConverter();
+      converter.addAllowedListPatterns(BackgroundMessage.class.getName(), ArrayList.class.getName(), HashSet.class.getName(),
+              ETextCsv.class.getName(), BackgroundMessage.FileGroup.class.getName());
+      return converter;
    }
 }

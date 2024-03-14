@@ -5,3 +5,78 @@
 .small-column-width {
     width: 1% !important;
 }
+
+.limited-column-width {
+    max-width: 220px;
+    overflow-wrap: break-word;
+}
+
+.button-heading::before {
+    content: 'View report';
+}
+
+
+.hover_focus:focus::after {
+    content: attr(title);
+    background-color: black;
+    color: white;
+    text-align: center;
+    margin-top: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent black transparent transparent;
+    border-radius: 6px;
+    padding: 5px 0;
+    position: absolute;
+    z-index: 1;
+    top: -5px;
+    right: 125%;
+}
+/*
+rvt-icon2[data-tooltip]:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    background-color: #000;
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 5px;
+    top: 25px;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    z-index: 1;
+}
+
+.msg-tooltip {
+    position: relative;
+    display: inline-block;
+}
+
+.msg-tooltip .msg-tooltiptext {
+    visibility: hidden;
+    width: 120px;
+    background-color: black;
+    color: white;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px 0;
+    position: absolute;
+    z-index: 1;
+    top: -5px;
+    right: 110%;
+}
+
+.msg-tooltip .msg-tooltiptext::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: 100%;
+    margin-top: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent white transparent transparent;
+}
+.msg-tooltip:hover .msg-tooltiptext {
+    visibility: visible;
+}
+*/

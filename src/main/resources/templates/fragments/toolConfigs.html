@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+
+<html lang="en-US" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title></title>
+</head>
+<body>
+<div th:fragment="toolConfig">
+    <span class="rvt-ts-23 rvt-text-bold">Tool information</span>
+    <p>
+        Note: If a row has a full, numeric value in the Client/Tab ID column, then it is a Client ID. Anything else should be considered a Tab ID.
+    </p>
+    <table id="toolInfoTable" class="rvt-table-stripes full-table-width">
+        <caption class="rvt-sr-only">Tool information table</caption>
+        <thead>
+        <tr>
+            <th scope="col">Tool</th>
+            <th scope="col">Tool Type</th>
+            <th scope="col" class="small-column-width">Client/Tab ID</th>
+            <th scope="col">JSON</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="config : ${toolConfigs}">
+            <th scope="row" th:text="${config.toolName}">Tool Name</th>
+            <td th:text="${config.toolType.getValue()}">Tool Type</td>
+            <td th:text="${config.contextId}">290000000000704</td>
+            <td th:text="${config.prettyPrintJson()}" style="white-space: pre">
+                <!-- can do something with JSON.stringify() to get a more proper json display -->
+                "{
+                ""name"": ""{{newToolName}}"",
+                ""course_navigation"": {
+                ""enabled"": true,
+                ""placement"": ""course_navigation"",
+                ""label"": ""Kritik-USA"",
+                ""text"": ""Kritik-USA""
+                }
+                }"
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+</body>
+</html>

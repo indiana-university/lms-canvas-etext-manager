@@ -26,7 +26,7 @@ public class SwaggerConfig {
    @Bean
    public GroupedOpenApi groupedOpenApi() {
       return GroupedOpenApi.builder()
-            .group("toolorganizer")
+            .group("etextmanager")
             .packagesToScan("edu.iu.uits.lms.etextmanager.controller.rest")
             .build();
    }

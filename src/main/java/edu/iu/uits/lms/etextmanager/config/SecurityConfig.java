@@ -1,7 +1,10 @@
 package edu.iu.uits.lms.etextmanager.config;
 
 import edu.iu.uits.lms.common.it12logging.LmsFilterSecurityInterceptorObjectPostProcessor;
-import edu.iu.uits.lms.lti.service.LmsDefaultGrantedAuthoritiesMapper;
+import edu.iu.uits.lms.common.it12logging.RestSecurityLoggingConfig;
+import edu.iu.uits.lms.common.oauth.CustomJwtAuthenticationConverter;
+import edu.iu.uits.lms.etextmanager.service.ETextService;
+import edu.iu.uits.lms.lti.repository.DefaultInstructorRoleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.context.annotation.Configuration;
@@ -9,6 +12,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 import uk.ac.ox.ctl.lti13.Lti13Configurer;
 
@@ -18,12 +22,40 @@ import static edu.iu.uits.lms.lti.LTIConstants.WELL_KNOWN_ALL;
 @Configuration
 public class SecurityConfig {
 
+
+    @Configuration
+    @Order(SecurityProperties.BASIC_AUTH_ORDER - 5)
+    public static class AppRestSecurityConfigurerAdapter extends WebSecurityConfigurerAdapter {
+
+        @Override
+        public void configure(HttpSecurity http) throws Exception {
+            http
+                    .cors().and()
+                    .requestMatchers().antMatchers("/rest/**", "/api/**")
+                    .and()
+                    .authorizeRequests()
+                    .antMatchers("/rest/**")
+                    .access("hasAuthority('SCOPE_lms:rest') and hasAuthority('ROLE_LMS_REST_ADMINS')")
+                    .antMatchers("/api/**").permitAll()
+                    .and()
+                    .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                    .and()
+                    .oauth2ResourceServer()
+                    .jwt().jwtAuthenticationConverter(new CustomJwtAuthenticationConverter());
+
+            http.apply(new RestSecurityLoggingConfig());
+        }
+    }
+
     @Configuration
     @Order(SecurityProperties.BASIC_AUTH_ORDER - 4)
     public static class AppWebSecurityConfigurerAdapter extends WebSecurityConfigurerAdapter {
 
         @Autowired
-        private LmsDefaultGrantedAuthoritiesMapper lmsDefaultGrantedAuthoritiesMapper;
+        private DefaultInstructorRoleRepository defaultInstructorRoleRepository;
+
+        @Autowired
+        private ETextService eTextUserService;
 
         @Override
         protected void configure(HttpSecurity http) throws Exception {
@@ -45,7 +77,8 @@ public class SecurityConfig {
 
             //Setup the LTI handshake
             Lti13Configurer lti13Configurer = new Lti13Configurer()
-                    .grantedAuthoritiesMapper(lmsDefaultGrantedAuthoritiesMapper);
+                    .grantedAuthoritiesMapper(new CustomRoleMapper(defaultInstructorRoleRepository, eTextUserService));
+
 
             http.apply(lti13Configurer);
 

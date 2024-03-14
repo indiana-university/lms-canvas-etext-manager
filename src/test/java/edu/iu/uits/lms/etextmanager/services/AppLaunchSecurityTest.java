@@ -2,10 +2,11 @@ package edu.iu.uits.lms.etextmanager.services;
 
 import edu.iu.uits.lms.canvas.services.CourseService;
 import edu.iu.uits.lms.common.session.CourseSessionService;
-import edu.iu.uits.lms.lti.LTIConstants;
-import edu.iu.uits.lms.lti.config.TestUtils;
 import edu.iu.uits.lms.etextmanager.config.ToolConfig;
 import edu.iu.uits.lms.etextmanager.controller.EtextManagerController;
+import edu.iu.uits.lms.etextmanager.service.ETextService;
+import edu.iu.uits.lms.lti.LTIConstants;
+import edu.iu.uits.lms.lti.config.TestUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -17,8 +18,6 @@ import org.springframework.http.MediaType;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultActions;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import uk.ac.ox.ctl.lti13.security.oauth2.client.lti.authentication.OidcAuthenticationToken;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -40,6 +39,9 @@ public class AppLaunchSecurityTest {
 
    @MockBean
    private CourseSessionService courseSessionService;
+
+   @MockBean
+   private ETextService eTextUserService;
 
    @Test
    public void appNoAuthnLaunch() throws Exception {

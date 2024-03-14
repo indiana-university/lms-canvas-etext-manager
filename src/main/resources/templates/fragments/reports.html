@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+
+<html lang="en-US" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title></title>
+</head>
+<body>
+<div th:fragment="reports">
+    <table id="appTable" class="rvt-table-stripes full-table-width">
+        <caption class="rvt-sr-only">Table with reports of various uploads</caption>
+        <thead>
+        <tr>
+            <th scope="col">Batch ID</th>
+            <th scope="col">Uploader</th>
+            <th scope="col">Date</th>
+            <th scope="col">Filename</th>
+            <th scope="col">Tool</th>
+            <th scope="col">SIS Course ID</th>
+            <th scope="col">Canvas Course ID</th>
+            <th scope="col">Tool ID</th>
+            <th scope="col">Deployment ID</th>
+            <th scope="col">Notes</th>
+        </tr>
+        <tr>
+            <th>Batch ID</th>
+            <th>Uploader</th>
+            <th>Date</th>
+            <th>Filename</th>
+            <th>Tool</th>
+            <th>SIS Course ID</th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        <th:block th:each="resultBatch : ${batches}">
+        <tr th:each="result : ${resultBatch.results}">
+            <th scope="row" th:text="${resultBatch.id}">batch id</th>
+            <td th:text="${resultBatch.uploader}">username</td>
+            <td th:text="${#dates.format(resultBatch.runDate, 'yyyy-MM-dd')}">2024-01-14</td>
+            <td th:text="${result.filename}">file.csv</td>
+            <td th:text="${result.tool}">Kritik</td>
+            <td th:text="${result.sisCourseId}">FA23-BL-COLL-C103-5621</td>
+            <td th:text="${result.canvasCourseId}">2165416</td>
+            <td th:text="${result.toolId}">458050</td>
+            <td th:text="${result.deploymentId}">458050:e6e723abdeb5a64d7b8163b045c8259372e42f02</td>
+            <td>
+                <button class="rvt-button rvt-button--plain hover_focus" th:title="${result.message}">
+                    <rvt-icon name="note" class="rvt-color-gold-300"></rvt-icon>
+                    <span class="rvt-sr-only" th:text="${result.message}"></span>
+                </button>
+            </td>
+        </tr>
+        </th:block>
+        </tbody>
+    </table>
+</div>
+</body>
+</html>

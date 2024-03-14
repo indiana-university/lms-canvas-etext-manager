@@ -5,7 +5,8 @@ import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 @Configuration
 @ConfigurationProperties(prefix = "etextmanager")
@@ -15,5 +16,8 @@ public class ToolConfig {
 
    private String version;
    private String env;
-   private List<String> instructorRoles;
+   private String backgroundQueueName;
+   private String groupCode;
+   private String[] defaultEmails;
+   private Map<String, String> toolSecrets = new HashMap<>();
 }
