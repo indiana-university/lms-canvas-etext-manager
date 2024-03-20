@@ -24,7 +24,7 @@
 </style>
 </head>
 <body>
-Status summary for eText Upload Processing (${env}) as of <#if env == 'CI'>RUN-TIMESTAMP<#else>${runTime?datetime}</#if>
+Status summary for eText Upload Processing (${env})
 
 <dl>
   <dt>Batch ID</dt>

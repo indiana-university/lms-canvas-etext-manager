@@ -39,6 +39,14 @@
        xhr.setRequestHeader(header, token);
     });
 
+    $(".loading-inline-btn").click(function(event) {
+        $(".loading-inline").show().addClass("rvt-flex");
+
+        // Set screenreader-only text to notify there is some loading action happening
+        var srText = $(this).find(".rvt-loader").data("loader-text");
+        $("#spinner-sr-text").text(srText).focus();
+    });
+
     document.addEventListener('rvtTabActivated', event => {
         var tabId = event.detail.tab.id;
         var urlBase = $(event.detail.tab).data('urlbase');
@@ -49,7 +57,16 @@
             $(innerDivId).load(urlBase, function( response, status, xhr ) {
                 $('#config-loader').toggleClass('rvt-display-none');
                 $('#toolInfoTable').DataTable({
-                    columnDefs: [{ targets: 3, orderable: false }]
+                    columnDefs: [{ targets: [3,4], orderable: false }],
+                    dom: '<"rvt-button-group rvt-m-bottom-md"B><lfrtip>',
+                    buttons: [
+                        {
+                            text: 'New Config', className: 'rvt-button',
+                            attr: {
+                                'data-rvt-dialog-trigger': 'edit-tool-properties-new'
+                            }
+                        }
+                    ]
                 });
                 var tooltable = $('#toolInfoTable').DataTable();
                 tooltable.columns.adjust().draw();
@@ -70,35 +87,34 @@
                        ],
                    initComplete: function () {
                        this.api()
-                       .columns( [0, 1, 3, 4, 5] )
+                       .columns('.selectFilter')
                        .every(function () {
                            var column = this;
                            var select = $('<select class="rvt-select"><option value="">All</option></select>')
                                .appendTo($("#appTable thead tr:eq(1) th").eq(column.index()).empty())
                                .on('change', function () {
-                                   var val = $.fn.dataTable.util.escapeRegex($(this).val());
-                                   column.search(val ? '^' + val + '$' : '', true, false).draw();
+                                   column.search($(this).val(), { exact: true }).draw();
                                })
                                .on( 'click' , function (evt) {
                                    evt.stopPropagation();
                                });
-                           column
-                               .data()
-                               .unique()
-                               .sort()
-                               .each(function (d, j) {
-                                   select.append('<option value="' + d + '">' + d + '</option>');
-                               });
+                           var colData = column.data().unique().sort();
+                           var hasHeaderClass = $(column.header()).hasClass('selectFilterReverse')
+                           if (hasHeaderClass) {
+                               colData.reverse();
+                           }
+                           colData.each(function (d, j) {
+                               select.append('<option value="' + d + '">' + d + '</option>');
+                           });
                        });
                        this.api()
-                       .columns( [2] )
+                       .columns('.inputFilter')
                        .every(function () {
                            let column = this;
                            var textinput = $('<input type="text" class="rvt-text-input" placeholder="Date">')
                                .appendTo($("#appTable thead tr:eq(1) th").eq(column.index()).empty())
                                .on('keyup', function () {
-                                   var val = $.fn.dataTable.util.escapeRegex($(this).val());
-                                   column.search(val).draw();
+                                   column.search(this.value).draw();
                                });
                        })
                        $('#appTable').wrap("<div style='overflow:auto;width:100%;position:relative;'></div>");

@@ -85,6 +85,7 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -139,16 +140,27 @@ public class ETextService {
     private static final DefaultPrettyPrinter PRETTY_PRINTER = new DefaultPrettyPrinter();
 
     static {
-        // Setup a pretty printer with an indenter (indenter has 4 spaces in this case)
+        // Setup a json "pretty printer" with an indenter (indenter has 4 spaces in this case)
         DefaultPrettyPrinter.Indenter indenter = new DefaultIndenter("    ", DefaultIndenter.SYS_LF);
         PRETTY_PRINTER.indentObjectsWith(indenter);
         PRETTY_PRINTER.indentArraysWith(indenter);
     }
 
+    /**
+     * Lookup a user from the authorized user table
+     * @param username Username of the user attempting to use the tool
+     * @return Found ETextUser, or null
+     */
     public ETextUser findByUsername(String username) {
         return eTextUserRepository.findByUsername(username);
     }
 
+    /**
+     * Send details to the background rabbit queue
+     * @param username Username of the uploader
+     * @param files List of uploaded files
+     * @throws IOException IOException if the uploaded files can't be processed
+     */
     public void sendToQueue(String username, MultipartFile[] files) throws IOException {
         BackgroundMessage message = new BackgroundMessage(username);
         Set<BackgroundMessage.FileGroup> fileGroups = new HashSet<>();
@@ -163,19 +175,26 @@ public class ETextService {
         backgroundMessageSender.send(message);
     }
 
+    /**
+     * Process the uploaded csv data
+     * @param username Username of the uploader
+     * @param fileGroups Grouped data, ready to be processed
+     */
     public void processCsvData(String username, Set<BackgroundMessage.FileGroup> fileGroups) {
         List<ETextResult> allResults = new ArrayList<>();
         Map<String, String> courseMap = new HashMap<>();
 
-        ETextResultsBatch resultsBatch = new ETextResultsBatch(username);
-        resultsBatch.setRunDate(new Date());
+        // Create the batch entry
+        ETextResultsBatch resultsBatch = new ETextResultsBatch(username, new Date());
 
+        // Iterate through the files
         for (BackgroundMessage.FileGroup fileGroup: fileGroups){
             String filename = fileGroup.getFileName();
             List<ETextCsv> data = fileGroup.getFileContent();
             log.debug("Got data for {} via {}", username, filename);
             log.debug("{}", data);
 
+            // Group the data by the tool
             Map<String, List<ETextCsv>> groupedTools = data.stream().collect(Collectors.groupingBy(ETextCsv::getTool));
             TreeMap<String, List<ETextCsv>> sorted = new TreeMap<>(groupedTools);
 
@@ -184,7 +203,7 @@ public class ETextService {
                     ETextToolConfig eTextToolConfig = eTextToolConfigRepository.findByToolName(entry.getKey());
                     switch (eTextToolConfig.getToolType()) {
                         case COURSE_13_PLACEMENT -> {
-                            allResults.addAll(handleCoursePlacement(eTextToolConfig, entry.getValue(), filename, courseMap));
+                            allResults.addAll(handle13CoursePlacement(eTextToolConfig, entry.getValue(), filename, courseMap));
                         }
                         case ROOT_13_PLACEMENT -> {
                             allResults.addAll(handleRootPlacement(eTextToolConfig, entry.getValue(), filename, courseMap));
@@ -199,14 +218,16 @@ public class ETextService {
                             allResults.addAll(handle11CoursePlacement(eTextToolConfig, entry.getValue(), filename, courseMap));
                             allResults.addAll(handleModulePlacement(eTextToolConfig, entry.getValue(), filename, courseMap));
                         }
-                        default -> throw new IllegalStateException("Unexpected value: " + eTextToolConfig.getToolType());
+                        default -> {
+                            throw new IllegalStateException("Unexpected value: " + eTextToolConfig.getToolType());
+                        }
                     }
                 } catch (Exception e) {
                     String message = "Unable to process data for " + entry.getKey();
                     ETextResult result = new ETextResult("", filename);
                     result.setMessage(message);
                     allResults.add(result);
-                    log.error("uh oh", e);
+                    log.error(message, e);
                 }
             }
         }
@@ -216,23 +237,32 @@ public class ETextService {
     }
 
 
-    private List<ETextResult> handleCoursePlacement(ETextToolConfig eTextToolConfig, List<ETextCsv> data,
-                                                    String filename, Map<String, String> courseMap) {
+    /**
+     * Handle LTI 1.3 course placement
+     * @param eTextToolConfig Config for this
+     * @param data Data to process
+     * @param filename Original uploaded filename
+     * @param courseMap Course "cache"
+     * @return List of results
+     */
+    private List<ETextResult> handle13CoursePlacement(ETextToolConfig eTextToolConfig, List<ETextCsv> data,
+                                                      String filename, Map<String, String> courseMap) {
         ConfigSettings configSettings = eTextToolConfig.getJsonBody();
         List<ETextResult> results = new ArrayList<>();
 
+        // Copy the config to the object we'll actually be working with
         LtiSettings ltiSettings = SerializationUtils.clone(configSettings.getLtiSettings());
 
         for (ETextCsv row : data) {
             List<String> resultMessages = new ArrayList<>();
             ETextResult result = new ETextResult(eTextToolConfig.getToolName(), filename);
+            result.setSisCourseId(row.getSisCourseId());
 
             try {
                 checkRequiredFields(new RequiredField("csv: sis course id", row.getSisCourseId()),
                         new RequiredField("csv: new tool name", row.getNewName()),
                         new RequiredField("config: context id", eTextToolConfig.getContextId()));
 
-                result.setSisCourseId(row.getSisCourseId());
                 ltiSettings.setName(row.getNewName());
                 ExternalTool externalTool = null;
                 try {
@@ -272,6 +302,14 @@ public class ETextService {
         return results;
     }
 
+    /**
+     * Handle LTI 1.1 course placement
+     * @param eTextToolConfig Config for this
+     * @param data Data to process
+     * @param filename Original uploaded filename
+     * @param courseMap Course "cache"
+     * @return List of results
+     */
     private List<ETextResult> handle11CoursePlacement(ETextToolConfig eTextToolConfig, List<ETextCsv> data,
                                                       String filename, Map<String, String> courseMap) {
         ConfigSettings configSettings = eTextToolConfig.getJsonBody();
@@ -282,13 +320,13 @@ public class ETextService {
         for (ETextCsv row : data) {
             List<String> resultMessages = new ArrayList<>();
             ETextResult result = new ETextResult(eTextToolConfig.getToolName(), filename);
+            result.setSisCourseId(row.getSisCourseId());
 
             try {
                 checkRequiredFields(new RequiredField("csv: sis course id", row.getSisCourseId()),
                         new RequiredField("csv: new tool name", row.getNewName()),
                         new RequiredField("config: lti consumer key", ltiSettings.getConsumerKey()));
 
-                result.setSisCourseId(row.getSisCourseId());
                 ltiSettings.setName(row.getNewName());
                 String secret = toolConfig.getToolSecrets().get(ltiSettings.getConsumerKey());
                 if (secret != null) {
@@ -329,6 +367,14 @@ public class ETextService {
         return results;
     }
 
+    /**
+     * Handle root level placement
+     * @param eTextToolConfig Config for this
+     * @param data Data to process
+     * @param filename Original uploaded filename
+     * @param courseMap Course "cache"
+     * @return List of results
+     */
     private List<ETextResult> handleRootPlacement(ETextToolConfig eTextToolConfig, List<ETextCsv> data,
                                                   String filename, Map<String, String> courseMap) {
         ConfigSettings configSettings = eTextToolConfig.getJsonBody();
@@ -338,6 +384,7 @@ public class ETextService {
 
         for (ETextCsv row : data) {
             ETextResult result = new ETextResult(eTextToolConfig.getToolName(), filename);
+            result.setSisCourseId(row.getSisCourseId());
 
             try {
                 checkRequiredFields(new RequiredField("csv: sis course id", row.getSisCourseId()));
@@ -357,7 +404,6 @@ public class ETextService {
                     result.setMessage("Error enabling tool: " + e.getMessage());
                     log.error("error in handle", e);
                 }
-                result.setSisCourseId(row.getSisCourseId());
                 result.setToolId(eTextToolConfig.getContextId());
 
             } catch (MissingFieldException mfe) {
@@ -370,6 +416,14 @@ public class ETextService {
         return results;
     }
 
+    /**
+     * Handle module placement
+     * @param eTextToolConfig Config for this
+     * @param data Data to process
+     * @param filename Original uploaded filename
+     * @param courseMap Course "cache"
+     * @return List of results
+     */
     private List<ETextResult> handleModulePlacement(ETextToolConfig eTextToolConfig, List<ETextCsv> data,
                                                     String filename, Map<String, String> courseMap) {
         ConfigSettings configSettings = eTextToolConfig.getJsonBody();
@@ -382,6 +436,7 @@ public class ETextService {
         for (ETextCsv row : data) {
             List<String> resultMessages = new ArrayList<>();
             ETextResult result = new ETextResult(eTextToolConfig.getToolName(), filename);
+            result.setSisCourseId(row.getSisCourseId());
 
             try {
                 checkRequiredFields(new RequiredField("csv: sis course id", row.getSisCourseId()),
@@ -389,8 +444,6 @@ public class ETextService {
                         new RequiredField("config: module item type", configSettings.getModuleItem().getType()),
                         new RequiredField("csv: pressbook title or config: module item title", row.getPressbookTitle(), configSettings.getModuleItem().getTitle()),
                         new RequiredField("csv: pressbook link or config: module item external url", row.getPressbookLink(), configSettings.getModuleItem().getExternalUrl()));
-
-                result.setSisCourseId(row.getSisCourseId());
 
                 Module module = null;
                 try {
@@ -466,8 +519,6 @@ public class ETextService {
     private void sendEmail(ETextResultsBatch batch) {
         Map<String, Object> emailModel = new HashMap<>();
 
-        Date runDate = new Date();
-        emailModel.put("runTime" , runDate);
         emailModel.put("env" , toolConfig.getEnv());
 
         emailModel.put("batch", batch);
@@ -511,6 +562,10 @@ public class ETextService {
         }
     }
 
+    /**
+     * Get all ETextToolConfig records
+     * @return List of ETextToolConfig records
+     */
     public List<ETextToolConfig> getToolConfigs() {
         List<ETextToolConfig> all = null;
         try {
@@ -521,40 +576,95 @@ public class ETextService {
         return all;
     }
 
+    /**
+     * Get all ETextResultsBatch records
+     * @return List of ETextResultsBatch records
+     */
     public List<ETextResultsBatch> getResultBatches() {
         return (List<ETextResultsBatch>) eTextResultsBatchRepository.findAll();
     }
 
+    /**
+     * Get the configured json pretty printer
+     * @return the configured json pretty printer
+     */
     public static DefaultPrettyPrinter getJsonPrettyPrinter() {
         return PRETTY_PRINTER;
     }
 
+    /**
+     * Lookup a course from the "cache", or Canvas if not found in the local map
+     * @param sisCourseId Sis Course id to use for the lookup
+     * @param courseMap Map of already looked up courses
+     * @return Canvas course id of the found course
+     */
     private String courseIdLookup(String sisCourseId, Map<String, String> courseMap) {
         return courseMap.computeIfAbsent(sisCourseId, key -> courseService.getCourse("sis_course_id:" + key).getId());
     }
 
+    /**
+     * Check if any of the passed required fields are missing values
+     * @param requiredFields List of RequiredField objects
+     * @throws MissingFieldException If any fields are missing
+     */
     private void checkRequiredFields(RequiredField... requiredFields) throws MissingFieldException {
-        List<String> missingFields = new ArrayList<>();
-        for (RequiredField rf : requiredFields) {
-            if (StringUtils.isBlank(rf.getFieldValue())) {
-                missingFields.add(rf.getFieldName());
-            }
-        }
+        List<String> missingFields = Arrays.stream(requiredFields)
+                .filter(RequiredField::invalid)
+                .map(RequiredField::getFieldName)
+                .collect(Collectors.toList());
 
         if (!missingFields.isEmpty()) {
             throw new MissingFieldException("The following fields were required but missing", missingFields);
         }
     }
 
+    /**
+     * Delete a tool config
+     * @param id Id to delete
+     */
+    public void deleteToolConfig(Long id) {
+        eTextToolConfigRepository.deleteById(id);
+    }
+
+    /**
+     * Add or edit a tool config
+     * @param id Id to edit
+     * @param eTextToolConfig Tool config to save
+     */
+    public void addEditToolConfig(Long id, ETextToolConfig eTextToolConfig) {
+        // Lookup with existing id, create new one if none found
+        ETextToolConfig existing = eTextToolConfigRepository.findById(id).orElse(new ETextToolConfig());
+
+        // Merge the updated fields with the existing fields
+        existing.mergeEditableFields(eTextToolConfig);
+        eTextToolConfigRepository.save(existing);
+    }
+
+    /**
+     * Class used to represent required fields
+     */
     @Data
     @AllArgsConstructor
     private static class RequiredField implements Serializable {
         private String fieldName;
         private String fieldValue;
 
+        /**
+         *
+         * @param fieldName Name of the field to use for the error message
+         * @param fieldValues List of possible values.  Will use the first non-blank value found
+         */
         public RequiredField(String fieldName, String... fieldValues) {
             this.fieldName = fieldName;
             this.fieldValue = StringUtils.firstNonBlank(fieldValues);
+        }
+
+        /**
+         * If the fieldValue is blank, it is invalid
+         * @return True/false for invalid/valid
+         */
+        public boolean invalid() {
+            return StringUtils.isBlank(fieldValue);
         }
     }
 

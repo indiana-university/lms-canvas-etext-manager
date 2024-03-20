@@ -98,6 +98,10 @@ public class ETextToolConfig implements Serializable {
     @Column(name = "MODIFIEDON")
     private Date modifiedOn;
 
+    /**
+     * Output the json in a "pretty" format
+     * @return
+     */
     public String prettyPrintJson() {
         ObjectMapper om = new ObjectMapper();
         try {
@@ -105,6 +109,19 @@ public class ETextToolConfig implements Serializable {
             return om.writer(ETextService.getJsonPrettyPrinter()).writeValueAsString(jsonBody);
         } catch (JsonProcessingException e) {
             return "ERROR PARSING JSON";
+        }
+    }
+
+    /**
+     * Merge fields from the input into this object
+     * @param editable
+     */
+    public void mergeEditableFields(ETextToolConfig editable) {
+        if (editable != null) {
+            this.toolName = editable.getToolName();
+            this.toolType = editable.getToolType();
+            this.contextId = editable.getContextId();
+            this.jsonBody = editable.getJsonBody();
         }
     }
 

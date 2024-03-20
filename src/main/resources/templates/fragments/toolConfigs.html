@@ -44,6 +44,7 @@
     <p>
         Note: If a row has a full, numeric value in the Client/Tab ID column, then it is a Client ID. Anything else should be considered a Tab ID.
     </p>
+    <div th:replace="fragments/toolConfigs :: add-tool-properties"></div>
     <table id="toolInfoTable" class="rvt-table-stripes full-table-width">
         <caption class="rvt-sr-only">Tool information table</caption>
         <thead>
@@ -52,6 +53,7 @@
             <th scope="col">Tool Type</th>
             <th scope="col" class="small-column-width">Client/Tab ID</th>
             <th scope="col">JSON</th>
+            <th scope="col">Actions</th>
         </tr>
         </thead>
         <tbody>
@@ -71,9 +73,117 @@
                 }
                 }"
             </td>
+            <td>
+                <div class="rvt-button-group">
+                    <button type="button" class="rvt-button rvt-button--secondary"
+                            th:data-rvt-dialog-trigger="@{|edit-tool-properties-${config.id}|}">
+                        <span>Edit <span class="rvt-sr-only" th:text="${config.toolName}">Tool Name</span></span>
+                    </button>
+                    <button type="button" class="rvt-button rvt-button--secondary rvt-m-right-sm"
+                            th:attr="data-rvt-dialog-trigger=@{|delete-config-${config.id}|}">
+                        <span>Delete <span class="rvt-sr-only" th:text="${config.toolName}">Tool Name</span></span>
+                    </button>
+                </div>
+                <div th:replace="fragments/toolConfigs :: edit-tool-properties(${config})"></div>
+                <div th:replace="fragments/toolConfigs :: delete-config(${config.id}, ${config.toolName})"></div>
+            </td>
         </tr>
         </tbody>
     </table>
 </div>
+
+<div th:fragment="delete-config(id, name)">
+    <div class="rvt-dialog"
+         th:id="'delete-config-' + ${id}"
+         role="dialog"
+         th:data-rvt-dialog="'delete-config-' + ${id}"
+         th:aria-labelledby="'delete-config-dialog-' + ${id}"
+         th:aria-describedby="'delete-config-dialog-text-' + ${id}"
+         hidden
+         tabindex="-1"
+         data-rvt-dialog-modal
+         data-rvt-dialog-darken-page
+         data-rvt-dialog-disable-page-interaction>
+        <form th:id="'form-delete-config-' + ${id}" th:action="@{|/app/config/delete/${id}|}" method="post">
+            <header class="rvt-dialog__header">
+                <h1 class="rvt-dialog__title" th:id="'delete-config-dialog-' + ${id}" th:text="'Delete Configuration for ' + ${name}">Delete (tool name)</h1>
+            </header>
+            <div class="rvt-dialog__body">
+                <p th:id="'delete-config-dialog-text-' + ${id}">
+                    Are you sure you want to delete it?
+                </p>
+            </div>
+            <div class="rvt-dialog__controls">
+                <button id="deleteConfig" class="rvt-button" onclick="buttonLoading(this)" th:data-form-id="'form-delete-config-' + ${id}">
+                    <span class="rvt-button__content">Yes, Delete</span>
+                    <div class="rvt-loader rvt-loader--xs rvt-display-none" aria-label="Deleting tool configuration"></div>
+                </button>
+                <button type="button" class="rvt-button rvt-button--secondary" th:data-rvt-dialog-close="'delete-config-' + ${id}">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div th:fragment="add-tool-properties">
+    <div th:replace="fragments/toolConfigs :: tool-properties('new', '', '', '', '', 'Add New Configuration', 'add')"></div>
+</div>
+
+<div th:fragment="edit-tool-properties(toolConfig)">
+    <div th:replace="fragments/toolConfigs :: tool-properties(${toolConfig.id}, ${toolConfig.toolName}, ${toolConfig.toolType.name}, ${toolConfig.contextId}, ${toolConfig.prettyPrintJson()}, 'Edit Configuration for ' + ${toolConfig.toolName}, 'edit/' + ${toolConfig.id})"></div>
+</div>
+
+<div th:fragment="tool-properties(id, toolName, toolTypeName, contextId, jsonBody, modalTitle, submitUrl)">
+    <div class="rvt-dialog"
+         th:id="'edit-tool-properties-' + ${id}"
+         role="dialog"
+         th:data-rvt-dialog="'edit-tool-properties-' + ${id}"
+         th:aria-labelledby="'edit-tool-properties-dialog-' + ${id}"
+         hidden
+         tabindex="-1"
+         data-rvt-dialog-modal
+         data-rvt-dialog-darken-page
+         data-rvt-dialog-disable-page-interaction>
+        <form th:id="'form-edit-tool-' + ${id}" th:action="@{|/app/config/${submitUrl}|}" method="post">
+            <div th:if="${configErrors}" class="rvt-inline-alert rvt-inline-alert--standalone rvt-inline-alert--danger rvt-m-bottom-sm">
+                <span class="rvt-inline-alert__icon">
+                    <svg fill="currentColor" width="16" height="16" viewBox="0 0 16 16"><path d="m8 6.586-2-2L4.586 6l2 2-2 2L6 11.414l2-2 2 2L11.414 10l-2-2 2-2L10 4.586l-2 2Z"></path><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0ZM2 8a6 6 0 1 1 12 0A6 6 0 0 1 2 8Z"></path></svg>
+                </span>
+                <span class="rvt-inline-alert__message" id="bad-csv-header-message">There was a problem saving the configuration.  Check the JSON to make sure it is valid.</span>
+            </div>
+            <header class="rvt-dialog__header">
+                <h1 class="rvt-dialog__title" th:id="'edit-tool-properties-dialog-' + ${id}" th:text="${modalTitle}">Edit Properties for (tool name)</h1>
+            </header>
+            <div class="rvt-dialog__body">
+                <label th:for="'tool-name-' + ${id}" class="rvt-label">Name</label>
+                <input type="text" th:id="'tool-name-' + ${id}" name="toolName" th:value="${toolName}" class="rvt-text-input" />
+
+                <div class="rvt-m-top-md">
+                    <label th:for="'tool-type-' + ${id}" class="rvt-label rvt-ts-16">Tool Type</label>
+                    <select th:id="'tool-type-' + ${id}" name="toolType" class="rvt-select">
+                        <option value="">- Select a tool type -</option>
+                        <option th:each="toolType : ${toolTypes}" th:value="${toolType.name}" th:selected="${toolType.name == toolTypeName}"
+                                th:text="${toolType.value}">Tool Type ####</option>
+                    </select>
+                </div>
+
+                <label th:for="'contextid-' + ${id}" class="rvt-m-top-md rvt-label">Client/Tab ID</label>
+                <input type="text" th:id="'contextid-' + ${id}" name="contextId" th:value="${contextId}" class="rvt-text-input" />
+
+                <label th:for="'json-' + ${id}" class="rvt-m-top-md rvt-label">JSON</label>
+                <textarea type="text" th:id="'json-' + ${id}" name="jsonBodyString" th:text="${jsonBody}" class="rvt-textarea"></textarea>
+
+            </div>
+            <div class="rvt-dialog__controls">
+                <input th:unless="${id == 'new'}" type="hidden" name="id" th:value="${id}" />
+                <button id="submitConfig" class="rvt-button" onclick="buttonLoading(this)" th:data-form-id="'form-edit-tool-' + ${id}">
+                    <span class="rvt-button__content">Save</span>
+                    <div class="rvt-loader rvt-loader--xs rvt-display-none" aria-label="Saving tool configuration"></div>
+                </button>
+                <button type="button" class="rvt-button rvt-button--secondary" th:data-rvt-dialog-close="'edit-tool-properties-' + ${id}">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 </body>
 </html>

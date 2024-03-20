@@ -33,6 +33,9 @@ package edu.iu.uits.lms.etextmanager.controller;
  * #L%
  */
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.iu.uits.lms.etextmanager.model.ConfigSettings;
 import edu.iu.uits.lms.etextmanager.model.ETextResultsBatch;
 import edu.iu.uits.lms.etextmanager.model.ETextToolConfig;
 import edu.iu.uits.lms.etextmanager.service.ETextService;
@@ -45,6 +48,8 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -64,6 +69,9 @@ public class EtextManagerController extends OidcTokenAwareController {
     @Autowired
     private ETextService eTextService = null;
 
+    @Autowired
+    private ObjectMapper objectMapper = null;
+
     @RequestMapping(value = "/launch")
     @Secured(LTIConstants.INSTRUCTOR_AUTHORITY)
     public String launch(Model model, HttpSession httpSession) {
@@ -81,16 +89,19 @@ public class EtextManagerController extends OidcTokenAwareController {
 
     @RequestMapping(value = {"/index"})
     @Secured(LTIConstants.INSTRUCTOR_AUTHORITY)
-    public ModelAndView index(Model model, HttpSession httpSession) {
+    public ModelAndView index(Model model) {
         OidcAuthenticationToken token = getTokenWithoutContext();
 
+        // Set the active tab, if not already set
+        if (!model.containsAttribute("activeTab")) {
+            model.addAttribute("activeTab", "upload-panel");
+        }
         return new ModelAndView("index");
     }
 
     @PostMapping("/upload")
     @Secured(LTIConstants.INSTRUCTOR_AUTHORITY)
-    public ModelAndView upload(@RequestParam("csv-file-input") MultipartFile[] files,
-                               Model model, HttpSession session) {
+    public ModelAndView upload(@RequestParam("csv-file-input") MultipartFile[] files, Model model) {
         log.debug("/upload");
         OidcAuthenticationToken token = getTokenWithoutContext();
         OidcTokenUtils tokenUtils = new OidcTokenUtils(token);
@@ -104,7 +115,7 @@ public class EtextManagerController extends OidcTokenAwareController {
             model.addAttribute("fileErrors", true);
         }
 
-        return index(model, session);
+        return index(model);
     }
 
     @GetMapping(value = "/toolConfigs")
@@ -113,6 +124,7 @@ public class EtextManagerController extends OidcTokenAwareController {
         OidcAuthenticationToken token = getTokenWithoutContext();
         List<ETextToolConfig> toolConfigs = eTextService.getToolConfigs();
         model.addAttribute("toolConfigs", toolConfigs);
+        model.addAttribute("toolTypes", ETextToolConfig.TOOL_TYPE.values());
 
         return "fragments/toolConfigs :: toolConfig";
     }
@@ -125,6 +137,48 @@ public class EtextManagerController extends OidcTokenAwareController {
         model.addAttribute("batches", resultBatches);
 
         return "fragments/reports :: reports";
+    }
+
+    @PostMapping(value = "/config/delete/{id}")
+    @Secured(LTIConstants.INSTRUCTOR_AUTHORITY)
+    public ModelAndView deleteConfig(@PathVariable Long id, Model model) {
+        OidcAuthenticationToken token = getTokenWithoutContext();
+
+        eTextService.deleteToolConfig(id);
+        model.addAttribute("activeTab", "config-panel");
+        return index(model);
+    }
+
+    @PostMapping(value = "/config/edit/{id}")
+    @Secured(LTIConstants.INSTRUCTOR_AUTHORITY)
+    public ModelAndView editConfig(@PathVariable Long id, @ModelAttribute ETextToolConfig submittedToolConfig,
+                             @RequestParam(name = "jsonBodyString") String jsonBodyString, Model model) {
+        OidcAuthenticationToken token = getTokenWithoutContext();
+        try {
+            submittedToolConfig.setJsonBody(objectMapper.readValue(jsonBodyString, ConfigSettings.class));
+            eTextService.addEditToolConfig(id, submittedToolConfig);
+        } catch (JsonProcessingException e) {
+            log.error("unable to save form", e);
+            model.addAttribute("configErrors", true);
+        }
+        model.addAttribute("activeTab", "config-panel");
+        return index(model);
+    }
+
+    @PostMapping(value = "/config/add")
+    @Secured(LTIConstants.INSTRUCTOR_AUTHORITY)
+    public ModelAndView addConfig(@ModelAttribute ETextToolConfig submittedToolConfig,
+                                  @RequestParam(name = "jsonBodyString") String jsonBodyString, Model model) {
+        OidcAuthenticationToken token = getTokenWithoutContext();
+        try {
+            submittedToolConfig.setJsonBody(objectMapper.readValue(jsonBodyString, ConfigSettings.class));
+            eTextService.addEditToolConfig(-1L, submittedToolConfig);
+        } catch (JsonProcessingException e) {
+            log.error("unable to save form", e);
+            model.addAttribute("configErrors", true);
+        }
+        model.addAttribute("activeTab", "config-panel");
+        return index(model);
     }
 
 }

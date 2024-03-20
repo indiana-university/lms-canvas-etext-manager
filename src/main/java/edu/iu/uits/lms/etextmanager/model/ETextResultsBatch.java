@@ -82,6 +82,7 @@ public class ETextResultsBatch {
     @EqualsAndHashCode.Exclude
     private List<ETextResult> results;
 
+    @NonNull
     @JsonFormat(pattern = DateFormatUtil.JSON_DATE_FORMAT)
     @Column(name = "RUN_DATE")
     private Date runDate;

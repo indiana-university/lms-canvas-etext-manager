@@ -24,7 +24,7 @@
 </style>
 </head>
 <body>
-Status summary for eText Upload Processing (CI) as of RUN-TIMESTAMP
+Status summary for eText Upload Processing (CI)
 
 <dl>
   <dt>Batch ID</dt>
