@@ -35,6 +35,7 @@ package edu.iu.uits.lms.etextmanager.service;
 
 import com.fasterxml.jackson.core.util.DefaultIndenter;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
+import edu.iu.uits.lms.canvas.model.Course;
 import edu.iu.uits.lms.canvas.model.ExternalTool;
 import edu.iu.uits.lms.canvas.model.LtiSettings;
 import edu.iu.uits.lms.canvas.model.Module;
@@ -596,10 +597,16 @@ public class ETextService {
      * Lookup a course from the "cache", or Canvas if not found in the local map
      * @param sisCourseId Sis Course id to use for the lookup
      * @param courseMap Map of already looked up courses
-     * @return Canvas course id of the found course
+     * @return Canvas course id of the found course, null if no course exists
      */
     private String courseIdLookup(String sisCourseId, Map<String, String> courseMap) {
-        return courseMap.computeIfAbsent(sisCourseId, key -> courseService.getCourse("sis_course_id:" + key).getId());
+        return courseMap.computeIfAbsent(sisCourseId, key -> {
+            Course course = courseService.getCourse("sis_course_id:" + key);
+            if (course != null) {
+                return course.getId();
+            }
+            return null;
+        });
     }
 
     /**

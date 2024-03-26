@@ -39,14 +39,6 @@
        xhr.setRequestHeader(header, token);
     });
 
-    $(".loading-inline-btn").click(function(event) {
-        $(".loading-inline").show().addClass("rvt-flex");
-
-        // Set screenreader-only text to notify there is some loading action happening
-        var srText = $(this).find(".rvt-loader").data("loader-text");
-        $("#spinner-sr-text").text(srText).focus();
-    });
-
     document.addEventListener('rvtTabActivated', event => {
         var tabId = event.detail.tab.id;
         var urlBase = $(event.detail.tab).data('urlbase');
@@ -98,9 +90,18 @@
                                .on( 'click' , function (evt) {
                                    evt.stopPropagation();
                                });
-                           var colData = column.data().unique().sort();
-                           var hasHeaderClass = $(column.header()).hasClass('selectFilterReverse')
-                           if (hasHeaderClass) {
+                           var colData = column.data().unique();
+                           var hasReverseHeaderClass = $(column.header()).hasClass('selectFilterReverse')
+                           var hasNumericSortHeaderClass = $(column.header()).hasClass('numericSort')
+                           if (hasNumericSortHeaderClass) {
+                               // Numeric sort
+                               colData.sort((a, b) => a - b);
+                           } else {
+                               // Regular string sort
+                               colData.sort();
+                           }
+
+                           if (hasReverseHeaderClass) {
                                colData.reverse();
                            }
                            colData.each(function (d, j) {

@@ -114,7 +114,7 @@
                 </p>
             </div>
             <div class="rvt-dialog__controls">
-                <button id="deleteConfig" class="rvt-button" onclick="buttonLoading(this)" th:data-form-id="'form-delete-config-' + ${id}">
+                <button type="button" id="deleteConfig" class="rvt-button" onclick="buttonLoading(this)" th:data-form-id="'form-delete-config-' + ${id}">
                     <span class="rvt-button__content">Yes, Delete</span>
                     <div class="rvt-loader rvt-loader--xs rvt-display-none" aria-label="Deleting tool configuration"></div>
                 </button>
@@ -144,11 +144,11 @@
          data-rvt-dialog-darken-page
          data-rvt-dialog-disable-page-interaction>
         <form th:id="'form-edit-tool-' + ${id}" th:action="@{|/app/config/${submitUrl}|}" method="post">
-            <div th:if="${configErrors}" class="rvt-inline-alert rvt-inline-alert--standalone rvt-inline-alert--danger rvt-m-bottom-sm">
+            <div th:id="'config-error-' + ${id}" class="config-error rvt-inline-alert rvt-inline-alert--standalone rvt-inline-alert--danger rvt-m-bottom-sm rvt-display-none">
                 <span class="rvt-inline-alert__icon">
                     <svg fill="currentColor" width="16" height="16" viewBox="0 0 16 16"><path d="m8 6.586-2-2L4.586 6l2 2-2 2L6 11.414l2-2 2 2L11.414 10l-2-2 2-2L10 4.586l-2 2Z"></path><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0ZM2 8a6 6 0 1 1 12 0A6 6 0 0 1 2 8Z"></path></svg>
                 </span>
-                <span class="rvt-inline-alert__message" id="bad-csv-header-message">There was a problem saving the configuration.  Check the JSON to make sure it is valid.</span>
+                <span class="rvt-inline-alert__message" id="bad-config-message">There was a problem saving the configuration.  <span th:id="'bad-config-reason-' + ${id}" class="bad-config-reason">placeholder</span></span>
             </div>
             <header class="rvt-dialog__header">
                 <h1 class="rvt-dialog__title" th:id="'edit-tool-properties-dialog-' + ${id}" th:text="${modalTitle}">Edit Properties for (tool name)</h1>
@@ -175,7 +175,7 @@
             </div>
             <div class="rvt-dialog__controls">
                 <input th:unless="${id == 'new'}" type="hidden" name="id" th:value="${id}" />
-                <button id="submitConfig" class="rvt-button" onclick="buttonLoading(this)" th:data-form-id="'form-edit-tool-' + ${id}">
+                <button type="button" id="submitConfig" class="rvt-button" onclick="buttonLoading(this)" th:data-form-id="'form-edit-tool-' + ${id}">
                     <span class="rvt-button__content">Save</span>
                     <div class="rvt-loader rvt-loader--xs rvt-display-none" aria-label="Saving tool configuration"></div>
                 </button>

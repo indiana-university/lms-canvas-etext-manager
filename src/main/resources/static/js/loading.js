@@ -43,12 +43,33 @@ function buttonLoading(button, formSubmit = true) {
     if (formSubmit) {
         // FF doesn't need this, but Chrome and Edge do
         // Also, Rivet 2 moves the dialog out of the form ¯\_(ツ)_/¯ so we have to manually get the form by id
+        let form;
         if (button.form) {
-            button.form.submit();
+            form = button.form;
         } else {
             // the form id will be found in a data attribute
             const formId = button.dataset.formId;
-            document.getElementById(formId).submit();
+            form = document.getElementById(formId);
         }
+
+        var jqForm = $(form);
+
+        var jqxhr = $.post(jqForm.attr('action'), jqForm.serialize());
+        jqxhr.done(function(data) {
+            // Close dialog and reload base page
+            window.location.replace(data.location);
+        });
+        jqxhr.fail(function(result) {
+            // Show error message
+            $(".bad-config-reason", "#" + jqForm.attr("id")).text(result.responseJSON.message);
+            $(".config-error", "#" + jqForm.attr("id")).removeClass("rvt-display-none");
+
+            // Re-activate buttons and stuff
+            for(var i = 0; i < buttonsToDisable.length; i++) {
+                buttonsToDisable[i].disabled = false;
+            }
+            button.classList.remove("rvt-button--loading");
+            button.getElementsByTagName('div')[0].classList.add("rvt-display-none");
+        });
     }
 }

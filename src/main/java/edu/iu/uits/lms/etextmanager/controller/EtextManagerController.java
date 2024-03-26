@@ -42,8 +42,11 @@ import edu.iu.uits.lms.etextmanager.service.ETextService;
 import edu.iu.uits.lms.lti.LTIConstants;
 import edu.iu.uits.lms.lti.controller.OidcTokenAwareController;
 import edu.iu.uits.lms.lti.service.OidcTokenUtils;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -59,6 +62,7 @@ import uk.ac.ox.ctl.lti13.security.oauth2.client.lti.authentication.OidcAuthenti
 
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.List;
 
 @Controller
@@ -89,13 +93,12 @@ public class EtextManagerController extends OidcTokenAwareController {
 
     @RequestMapping(value = {"/index"})
     @Secured(LTIConstants.INSTRUCTOR_AUTHORITY)
-    public ModelAndView index(Model model) {
+    public ModelAndView index(Model model, @RequestParam(name = "activeTab", defaultValue = "upload-panel", required = false) String activeTab) {
         OidcAuthenticationToken token = getTokenWithoutContext();
 
-        // Set the active tab, if not already set
-        if (!model.containsAttribute("activeTab")) {
-            model.addAttribute("activeTab", "upload-panel");
-        }
+        // Set the active tab
+        model.addAttribute("activeTab", activeTab);
+
         return new ModelAndView("index");
     }
 
@@ -115,7 +118,7 @@ public class EtextManagerController extends OidcTokenAwareController {
             model.addAttribute("fileErrors", true);
         }
 
-        return index(model);
+        return index(model, null);
     }
 
     @GetMapping(value = "/toolConfigs")
@@ -141,18 +144,34 @@ public class EtextManagerController extends OidcTokenAwareController {
 
     @PostMapping(value = "/config/delete/{id}")
     @Secured(LTIConstants.INSTRUCTOR_AUTHORITY)
-    public ModelAndView deleteConfig(@PathVariable Long id, Model model) {
+    public ResponseEntity<PageReload> deleteConfig(@PathVariable Long id, Model model) {
         OidcAuthenticationToken token = getTokenWithoutContext();
 
-        eTextService.deleteToolConfig(id);
-        model.addAttribute("activeTab", "config-panel");
-        return index(model);
+        try {
+            eTextService.deleteToolConfig(id);
+        } catch (Exception e) {
+            log.error("unable to delete config", e);
+            model.addAttribute("configErrors", true);
+            return ResponseEntity.badRequest().body(new PageReload(null, e.getMessage()));
+        }
+        return ResponseEntity.ok(new PageReload("/app/index?activeTab=config-panel", "success"));
     }
 
     @PostMapping(value = "/config/edit/{id}")
     @Secured(LTIConstants.INSTRUCTOR_AUTHORITY)
-    public ModelAndView editConfig(@PathVariable Long id, @ModelAttribute ETextToolConfig submittedToolConfig,
+    public ResponseEntity<PageReload> editConfig(@PathVariable Long id, @ModelAttribute ETextToolConfig submittedToolConfig,
                              @RequestParam(name = "jsonBodyString") String jsonBodyString, Model model) {
+        return addEdit(id, submittedToolConfig, jsonBodyString, model);
+    }
+
+    @PostMapping(value = "/config/add")
+    @Secured(LTIConstants.INSTRUCTOR_AUTHORITY)
+    public ResponseEntity<PageReload> addConfig(@ModelAttribute ETextToolConfig submittedToolConfig,
+                                  @RequestParam(name = "jsonBodyString") String jsonBodyString, Model model) {
+        return addEdit(-1L, submittedToolConfig, jsonBodyString, model);
+    }
+
+    private ResponseEntity<PageReload> addEdit(Long id, ETextToolConfig submittedToolConfig, String jsonBodyString, Model model) {
         OidcAuthenticationToken token = getTokenWithoutContext();
         try {
             submittedToolConfig.setJsonBody(objectMapper.readValue(jsonBodyString, ConfigSettings.class));
@@ -160,25 +179,16 @@ public class EtextManagerController extends OidcTokenAwareController {
         } catch (JsonProcessingException e) {
             log.error("unable to save form", e);
             model.addAttribute("configErrors", true);
+            return ResponseEntity.badRequest().body(new PageReload(null, e.getMessage()));
         }
-        model.addAttribute("activeTab", "config-panel");
-        return index(model);
+        return ResponseEntity.ok(new PageReload("/app/index?activeTab=config-panel", "success"));
     }
 
-    @PostMapping(value = "/config/add")
-    @Secured(LTIConstants.INSTRUCTOR_AUTHORITY)
-    public ModelAndView addConfig(@ModelAttribute ETextToolConfig submittedToolConfig,
-                                  @RequestParam(name = "jsonBodyString") String jsonBodyString, Model model) {
-        OidcAuthenticationToken token = getTokenWithoutContext();
-        try {
-            submittedToolConfig.setJsonBody(objectMapper.readValue(jsonBodyString, ConfigSettings.class));
-            eTextService.addEditToolConfig(-1L, submittedToolConfig);
-        } catch (JsonProcessingException e) {
-            log.error("unable to save form", e);
-            model.addAttribute("configErrors", true);
-        }
-        model.addAttribute("activeTab", "config-panel");
-        return index(model);
+    @Data
+    @AllArgsConstructor
+    public static class PageReload implements Serializable {
+        private String location;
+        private String message;
     }
 
 }
