@@ -151,7 +151,6 @@ public class EtextManagerController extends OidcTokenAwareController {
             eTextService.deleteToolConfig(id);
         } catch (Exception e) {
             log.error("unable to delete config", e);
-            model.addAttribute("configErrors", true);
             return ResponseEntity.badRequest().body(new PageReload(null, e.getMessage()));
         }
         return ResponseEntity.ok(new PageReload("/app/index?activeTab=config-panel", "success"));
@@ -178,7 +177,6 @@ public class EtextManagerController extends OidcTokenAwareController {
             eTextService.addEditToolConfig(id, submittedToolConfig);
         } catch (JsonProcessingException e) {
             log.error("unable to save form", e);
-            model.addAttribute("configErrors", true);
             return ResponseEntity.badRequest().body(new PageReload(null, e.getMessage()));
         }
         return ResponseEntity.ok(new PageReload("/app/index?activeTab=config-panel", "success"));
