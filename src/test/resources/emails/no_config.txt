@@ -1,0 +1,73 @@
+<html>
+<head>
+<style>
+  table, th, td {
+      border: 1px solid black;
+      border-collapse: collapse;
+  }
+
+  th, td {
+      padding: 15px;
+  }
+  table td:nth-child(2) {
+      text-align: end;
+  }
+
+  .upload_success {
+      color: green;
+  }
+
+  .upload_failure {
+      color: red;
+  }
+
+</style>
+</head>
+<body>
+Status summary for eText Upload Processing (CI)
+
+<dl>
+  <dt>Batch ID</dt>
+  <dd>1</dd>
+  <dt>Uploader</dt>
+  <dd>user1</dd>
+  <dt>Date</dt>
+  <dd>ROW-TIMESTAMP</dd>
+</dl>
+
+Processed eTexts with the following 2 entries:
+<table>
+<thead>
+<tr>
+   <th>Filename</th>
+   <th>Tool</th>
+   <th>Tool ID</th>
+   <th>SIS Course ID</th>
+   <th>Canvas Course ID</th>
+   <th>Deployment ID</th>
+   <th>Message</th>
+</tr>
+</thead>
+<tbody>
+    <tr>
+        <td>normal.csv</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td>Unable to process data for tool1</td>
+    </tr>
+    <tr>
+        <td>normal.csv</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td>Unable to process data for tool2</td>
+    </tr>
+</tbody>
+</table>
+</body>
+</html>
