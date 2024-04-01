@@ -475,7 +475,7 @@ public class ETextService {
                         ModuleItemCreateWrapper micw = new ModuleItemCreateWrapper();
                         micw.setModuleItem(mi);
                         ModuleItem moduleItem = moduleService.getModuleItemByTitle("sis_course_id:" + row.getSisCourseId(),
-                                module.getId(), configSettings.getModuleItem().getTitle());
+                                module.getId(), mi.getTitle());
 
                         if (moduleItem == null) {
                             moduleItem = moduleService.createModuleItem("sis_course_id:" + row.getSisCourseId(), module.getId(), micw);
