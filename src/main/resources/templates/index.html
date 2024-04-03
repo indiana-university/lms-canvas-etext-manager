@@ -1,14 +1,125 @@
-<!DOCTYPE HTML>
+<!DOCTYPE html>
+<!--
+  #%L
+  etext-manager
+  %%
+  Copyright (C) 2024 Indiana University
+  %%
+  Redistribution and use in source and binary forms, with or without modification,
+  are permitted provided that the following conditions are met:
+  
+  1. Redistributions of source code must retain the above copyright notice, this
+     list of conditions and the following disclaimer.
+  
+  2. Redistributions in binary form must reproduce the above copyright notice,
+     this list of conditions and the following disclaimer in the documentation
+     and/or other materials provided with the distribution.
+  
+  3. Neither the name of the Indiana University nor the names of its contributors
+     may be used to endorse or promote products derived from this software without
+     specific prior written permission.
+  
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+  ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+  DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+  OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+  OF THE POSSIBILITY OF SUCH DAMAGE.
+  #L%
+  -->
+
 <html lang="en-US"
       xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{layout}">
+      layout:decorate="~{layout}" xmlns="http://www.w3.org/1999/html">
 <head>
-    <title>microservices-template - Main Menu</title>
+    <meta charset="utf-8"/>
+    <title>eText Manager</title>
 </head>
 <body>
-    <div layout:fragment="content">
-        Hello, <span th:text="${userLoginId}">world</span>!
+<div layout:fragment="content">
+    <div th:if="${uploadSuccess}" class="rvt-alert rvt-alert--success [ rvt-m-top-md ]" role="alert" aria-labelledby="success-alert-title" data-rvt-alert="success">
+        <div class="rvt-alert__title" id="success-alert-title">File is being processed!</div>
+        <p class="rvt-alert__message">The file is being processed. Summary email will be sent at a later time.</p>
+        <button type="button" class="rvt-alert__dismiss" data-rvt-alert-close>
+            <span class="rvt-sr-only">Close</span>
+            <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+                <path fill="currentColor" d="M9.41,8l5.29-5.29a1,1,0,0,0-1.41-1.41L8,6.59,2.71,1.29A1,1,0,0,0,1.29,2.71L6.59,8,1.29,13.29a1,1,0,1,0,1.41,1.41L8,9.41l5.29,5.29a1,1,0,0,0,1.41-1.41Z"/>
+            </svg>
+        </button>
     </div>
+
+    <div class="rvt-p-tb-md">
+        <h1 id="tool-title" class="rvt-ts-36">eText Manager</h1>
+    </div>
+
+    <div class="rvt-tabs" data-rvt-tabs="etext-tabset">
+        <div class="rvt-tabs__tablist" aria-label="eText tabs" data-rvt-tablist>
+            <button class="rvt-tabs__tab" data-rvt-tab>Upload CSV</button>
+            <button class="rvt-tabs__tab" data-rvt-tab>View Report</button>
+            <button class="rvt-tabs__tab" data-rvt-tab>Tool Info</button>
+        </div>
+        <div id="upload-panel" class="rvt-tabs__panel" data-rvt-tab-panel th:attr="data-rvt-tab-init=${activeTab == 'upload-panel'} ? 'data-rvt-tab-init' : ''">
+            <span class="rvt-ts-23 rvt-text-bold">Upload a CSV</span>
+            <p>
+                Use the header listed below. You do not need to fill in every column with data, depending on the type of
+                placement you are uploading.
+
+                <dl class="rvt-list-description rvt-border-bottom rvt-p-bottom-md">
+                    <dt>CSV header</dt>
+                    <dd>Tool, New Name, SIS Course ID, Pressbook Title, Pressbook Link</dd>
+                </dl>
+            </p>
+            <form id="uploadForm" th:action="@{/app/upload}" method="post" enctype="multipart/form-data">
+                <div th:if="${fileErrors}" class="rvt-inline-alert rvt-inline-alert--standalone rvt-inline-alert--danger rvt-m-bottom-sm">
+                        <span class="rvt-inline-alert__icon">
+                            <svg fill="currentColor" width="16" height="16" viewBox="0 0 16 16"><path d="m8 6.586-2-2L4.586 6l2 2-2 2L6 11.414l2-2 2 2L11.414 10l-2-2 2-2L10 4.586l-2 2Z"></path><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0ZM2 8a6 6 0 1 1 12 0A6 6 0 0 1 2 8Z"></path></svg>
+                        </span>
+                    <span class="rvt-inline-alert__message" id="bad-csv-header-message">The CSV header was not recognized. Check the file to make sure it has a supported header.</span>
+                </div>
+                <fieldset class="rvt-fieldset">
+                    <legend class="rvt-m-bottom-sm">CSV File Uploads</legend>
+                    <div class="rvt-file" data-rvt-file-input="csv-file-input">
+                        <input type="file" data-rvt-file-input-button="csv-file-input" id="csv-file-input" name="csv-file-input" aria-describedby="csv-file-description" required multiple>
+                        <label for="csv-file-input" class="rvt-button rvt-button--secondary">
+                            <span>Upload CSVs</span>
+                            <svg fill="currentColor" width="16" height="16" viewBox="0 0 16 16"><path d="M2 1h8.414L14 4.586V15H2V1Zm2 2v10h8V7.5H7.5V3H4Zm5.5 0v2.5H12v-.086L9.586 3H9.5Z"></path></svg>
+                        </label>
+                        <div class="rvt-file__preview" data-rvt-file-input-preview="csv-file-input" id="csv-file-description">
+                            No files selected
+                        </div>
+                    </div>
+                </fieldset>
+                <div class="rvt-button-group rvt-m-top-md">
+                    <button class="rvt-button">Submit</button>
+                </div>
+            </form>
+        </div>
+        <div id="report-panel" class="rvt-tabs__panel" data-rvt-tab-panel th:attr="data-urlbase=@{/app/reports},data-rvt-tab-init=${activeTab == 'report-panel'} ? 'data-rvt-tab-init' : ''" data-inner-div-id="#reportsDiv">
+            <div id="reports-loader" class="rvt-display-none">
+                <div class="rvt-flex rvt-justify-center">
+                    <div class="rvt-loader rvt-loader--lg" aria-label="Content loading"></div>
+                </div>
+            </div>
+            <div id="reportsDiv"></div>
+        </div>
+        <div id="config-panel" class="rvt-tabs__panel" data-rvt-tab-panel th:attr="data-urlbase=@{/app/toolConfigs},data-rvt-tab-init=${activeTab == 'config-panel'} ? 'data-rvt-tab-init' : ''" data-inner-div-id="#toolConfigDiv">
+            <div id="config-loader" class="rvt-display-none">
+                <div class="rvt-flex rvt-justify-center">
+                    <div class="rvt-loader rvt-loader--lg" aria-label="Content loading"></div>
+                </div>
+            </div>
+            <div id="toolConfigDiv"></div>
+        </div>
+    </div>
+
+</div>
+<th:block layout:fragment="script">
+    <script type="text/javascript" th:src="@{/app/js/loading.js}"></script>
+</th:block>
 </body>
 </html>
