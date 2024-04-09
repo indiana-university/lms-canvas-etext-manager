@@ -50,6 +50,7 @@ public class ConfigSettings implements Serializable {
 
     private CanvasTab canvasTab;
     private LtiSettings ltiSettings;
+    private LtiSettings.CourseNavigation courseNavigation;
     private Module module;
     private ModuleItem moduleItem;
     private Boolean publishModule;
