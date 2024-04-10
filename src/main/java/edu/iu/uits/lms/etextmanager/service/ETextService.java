@@ -402,7 +402,8 @@ public class ETextService {
             result.setSisCourseId(row.getSisCourseId());
 
             try {
-                checkRequiredFields(new RequiredField("csv: sis course id", row.getSisCourseId()));
+                checkRequiredFields(new RequiredField("csv: sis course id", row.getSisCourseId()),
+                        new RequiredField("config: context id", eTextToolConfig.getContextId()));
 
                 try {
                     String courseId = courseIdLookup(row.getSisCourseId(), courseMap);
