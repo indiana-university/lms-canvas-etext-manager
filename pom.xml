@@ -15,7 +15,7 @@
     </parent>
 
     <description>LTI tool to help upload placements of eText tools and get information about the placements</description>
-    <url>https://github.com/indiana-university/lms-etext-manager</url>
+    <url>https://github.com/indiana-university/lms-canvas-etext-manager</url>
     <inceptionYear>2024</inceptionYear>
 
     <organization>
@@ -34,7 +34,7 @@
 
     <issueManagement>
         <system>GitHub</system>
-        <url>https://github.com/indiana-university/lms-etext-manager/issues</url>
+        <url>https://github.com/indiana-university/lms-canvas-etext-manager/issues</url>
     </issueManagement>
 
     <licenses>
@@ -45,23 +45,10 @@
         </license>
     </licenses>
 
-    <distributionManagement>
-        <repository>
-            <name>Sonatype OSS Repository</name>
-            <id>Sonatype-OSS</id>
-            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
-        </repository>
-        <snapshotRepository>
-            <name>Sonatype OSS Snapshot Repository</name>
-            <id>Sonatype-OSS</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-        </snapshotRepository>
-    </distributionManagement>
-
     <scm>
-        <connection>scm:git:https://github.com/indiana-university/lms-etext-manager.git</connection>
-        <developerConnection>scm:git:https://github.com/indiana-university/lms-etext-manager.git</developerConnection>
-        <url>https://github.com/indiana-university/lms-etext-manager</url>
+        <connection>scm:git:https://github.com/indiana-university/lms-canvas-etext-manager.git</connection>
+        <developerConnection>scm:git:https://github.com/indiana-university/lms-canvas-etext-manager.git</developerConnection>
+        <url>https://github.com/indiana-university/lms-canvas-etext-manager</url>
         <tag>HEAD</tag>
     </scm>
 
@@ -360,25 +347,13 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>org.sonatype.plugins</groupId>
-                <artifactId>nexus-staging-maven-plugin</artifactId>
-                <version>${plugins.nexus-staging.version}</version>
-                <extensions>true</extensions>
-                <configuration>
-                    <serverId>Sonatype-OSS</serverId>
-                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
-                </configuration>
-            </plugin>
-            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>
                 <version>${plugins.release.version}</version>
                 <configuration>
                     <autoVersionSubmodules>true</autoVersionSubmodules>
                     <useReleaseProfile>false</useReleaseProfile>
-                    <releaseProfiles>release</releaseProfiles>
-                    <goals>deploy</goals>
+                    <goals>install</goals>
                 </configuration>
             </plugin>
         </plugins>
@@ -400,53 +375,6 @@
     </build>
 
     <profiles>
-        <profile>
-            <id>release</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-source-plugin</artifactId>
-                        <version>${plugins.source.version}</version>
-                        <executions>
-                            <execution>
-                                <id>attach-sources</id>
-                                <goals>
-                                    <goal>jar-no-fork</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-javadoc-plugin</artifactId>
-                        <version>${plugins.javadoc.version}</version>
-                        <executions>
-                            <execution>
-                                <id>attach-javadocs</id>
-                                <goals>
-                                    <goal>jar</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-gpg-plugin</artifactId>
-                        <version>${plugins.gpg.version}</version>
-                        <executions>
-                            <execution>
-                                <id>sign-artifacts</id>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>sign</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
         <profile>
             <id>it12</id>
             <dependencies>
