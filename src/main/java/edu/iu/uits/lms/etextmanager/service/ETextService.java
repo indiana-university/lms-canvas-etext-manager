@@ -279,7 +279,7 @@ public class ETextService {
                     }
                     result.setToolId(externalTool.getId());
                 } catch (Exception e) {
-                    log.error("Error in step 1 of handleCoursePlacement", e);
+                    log.error("Error in step 1 of handle13CoursePlacement", e);
                     resultMessages.add("Error in step 1: " + e.getMessage());
                 }
                 if (externalTool != null) {
@@ -288,7 +288,7 @@ public class ETextService {
                         result.setDeploymentId(externalTool2.getDeploymentId());
                         resultMessages.add("Success");
                     } catch (Exception e) {
-                        log.error("Error in step 2 of handleCoursePlacement", e);
+                        log.error("Error in step 2 of handle13CoursePlacement", e);
                         resultMessages.add("Error in step 2: " + e.getMessage());
                     }
                 }
@@ -352,6 +352,20 @@ public class ETextService {
                     }
                     if (externalTool != null) {
                         result.setToolId(externalTool.getId());
+                        LtiSettings courseNavLtiSettings = new LtiSettings();
+                        LtiSettings.CourseNavigation courseNav = configSettings.getCourseNavigation();
+                        if (courseNav != null) {
+                            courseNavLtiSettings.setCourseNavigation(SerializationUtils.clone(courseNav));
+                            try {
+                                ExternalTool externalTool2 = externalToolsService.updateExternalToolForCourse(canvasService.getBaseUrl(), "sis_course_id:" + row.getSisCourseId(), externalTool.getId(), courseNavLtiSettings);
+                                if (externalTool2 != null) {
+                                    resultMessages.add("Adding course nav");
+                                }
+                            } catch (Exception e) {
+                                log.error("Error in step 2 of handle11CoursePlacement", e);
+                                resultMessages.add("Error in step 2: " + e.getMessage());
+                            }
+                        }
                     }
                 } catch (Exception e) {
                     resultMessages.add("Error in step 1: " + e.getMessage());
@@ -388,7 +402,8 @@ public class ETextService {
             result.setSisCourseId(row.getSisCourseId());
 
             try {
-                checkRequiredFields(new RequiredField("csv: sis course id", row.getSisCourseId()));
+                checkRequiredFields(new RequiredField("csv: sis course id", row.getSisCourseId()),
+                        new RequiredField("config: context id", eTextToolConfig.getContextId()));
 
                 try {
                     String courseId = courseIdLookup(row.getSisCourseId(), courseMap);
