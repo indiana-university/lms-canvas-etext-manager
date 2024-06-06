@@ -45,8 +45,10 @@
     <meta id="_csrf_header" name="_csrf_header" th:content="${_csrf.headerName}"/>
     <link rel="stylesheet" type="text/css" th:href="@{/app/jsrivet/rivet.min.css}" />
     <link rel="stylesheet" type="text/css" th:href="@{/app/jsrivet/rivet-icons.css}"/>
-    <link rel="stylesheet" type="text/css" th:href="@{/app/webjars/datatables/css/jquery.dataTables.min.css}"/>
+    <link rel="stylesheet" type="text/css" th:href="@{/app/webjars/datatables/css/dataTables.dataTables.min.css}"/>
+    <link rel="stylesheet" type="text/css" th:href="@{/app/webjars/datatables-select/css/select.dataTables.min.css}"/>
     <link rel="stylesheet" type="text/css" th:href="@{/app/css/etextmanager.css}"/>
+    <link rel="stylesheet" type="text/css" th:href="@{/app/jsrivet/datatables-ext/datatables-ally.css}"/>
 </head>
 
 <body>
@@ -63,10 +65,13 @@
 <script defer th:src="@{/app/jsrivet/rivet-icons.js}"></script>
 <script type="module" th:src="@{/app/jsrivet/rivet-icon-element.js}"></script>
 <script type="text/javascript" th:src="@{/app/webjars/jquery/jquery.min.js}"></script>
-<script type="text/javascript" th:src="@{/app/webjars/datatables/js/jquery.dataTables.min.js}"></script>
+<script type="text/javascript" th:src="@{/app/webjars/datatables/js/dataTables.min.js}"></script>
 <script type="text/javascript" th:src="@{/app/webjars/datatables-buttons/js/dataTables.buttons.min.js}"></script>
 <script type="text/javascript" th:src="@{/app/webjars/datatables-buttons/js/buttons.html5.min.js}"></script>
+<script type="text/javascript" th:src="@{/app/webjars/datatables-select/js/dataTables.select.min.js}"></script>
 <script type="text/javascript" th:src="@{/app/js/etextmanager.js}"></script>
+<script type="text/javascript" th:src="@{/app/jsrivet/datatables-ext/datatables-filters.js}"></script>
+<script type="text/javascript" th:src="@{/app/jsrivet/datatables-ext/datatables-ally.js}"></script>
 <script>
     Rivet.init();
 </script>

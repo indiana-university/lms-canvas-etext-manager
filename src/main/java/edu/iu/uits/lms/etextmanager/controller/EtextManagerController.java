@@ -142,6 +142,23 @@ public class EtextManagerController extends OidcTokenAwareController {
         return "fragments/reports :: reports";
     }
 
+    @PostMapping("/reports/archive")
+    @Secured(LTIConstants.INSTRUCTOR_AUTHORITY)
+    public ResponseEntity<PageReload> archive(@RequestParam("bulkArchive") List<Long> resultIds, Model model) {
+        log.debug("in /reports/archive");
+        OidcAuthenticationToken token = getTokenWithoutContext();
+
+        // do the archivals
+        try {
+            eTextService.archiveResults(resultIds, true);
+        } catch (Exception e) {
+            log.error("Error archiving results", e);
+            return ResponseEntity.badRequest().body(new PageReload(null, e.getMessage()));
+        }
+
+        return ResponseEntity.ok(new PageReload("/app/index?activeTab=report-panel", "success"));
+    }
+
     @PostMapping(value = "/config/delete/{id}")
     @Secured(LTIConstants.INSTRUCTOR_AUTHORITY)
     public ResponseEntity<PageReload> deleteConfig(@PathVariable Long id, Model model) {

@@ -37,20 +37,17 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import edu.iu.uits.lms.common.date.DateFormatUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
-import javax.persistence.CollectionTable;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
-import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
-import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
+import javax.persistence.OneToMany;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 import javax.persistence.SequenceGenerator;
@@ -76,10 +73,7 @@ public class ETextResultsBatch {
     @Column(name = "UPLOADER")
     private String uploader;
 
-    @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "ETEXT_RESULTS", joinColumns = @JoinColumn(name = "ETEXT_RESULTS_BATCH_ID"),
-            foreignKey = @ForeignKey(name = "FK_etext_results_batch"))
-    @EqualsAndHashCode.Exclude
+    @OneToMany(cascade = CascadeType.ALL, targetEntity = ETextResult.class, mappedBy = "batch", fetch = FetchType.EAGER, orphanRemoval = true)
     private List<ETextResult> results;
 
     @NonNull

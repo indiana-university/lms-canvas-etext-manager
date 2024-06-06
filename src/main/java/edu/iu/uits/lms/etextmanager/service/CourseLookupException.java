@@ -1,4 +1,4 @@
-package edu.iu.uits.lms.etextmanager.model;
+package edu.iu.uits.lms.etextmanager.service;
 
 /*-
  * #%L
@@ -33,31 +33,16 @@ package edu.iu.uits.lms.etextmanager.model;
  * #L%
  */
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
 
-import java.io.Serializable;
+public class CourseLookupException extends Exception {
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-public class ETextCsv implements Serializable {
-
-    @JsonProperty("Tool")
-    private String tool;
-
-    @JsonProperty("New Name")
-    private String newName;
-
-    @JsonProperty("SIS Course ID")
+    @Getter
     private String sisCourseId;
 
-    @JsonProperty("Pressbook Title")
-    private String pressbookTitle;
-
-    @JsonProperty("Pressbook Link")
-    private String pressbookLink;
+    public CourseLookupException(String message, String sisCourseId) {
+        super(message);
+        this.sisCourseId = sisCourseId;
+    }
 
 }

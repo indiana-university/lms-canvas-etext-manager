@@ -55,11 +55,13 @@ import edu.iu.uits.lms.etextmanager.config.BackgroundMessageSender;
 import edu.iu.uits.lms.etextmanager.config.ToolConfig;
 import edu.iu.uits.lms.etextmanager.model.CanvasTab;
 import edu.iu.uits.lms.etextmanager.model.ConfigSettings;
+import edu.iu.uits.lms.etextmanager.model.CourseIds;
 import edu.iu.uits.lms.etextmanager.model.ETextCsv;
 import edu.iu.uits.lms.etextmanager.model.ETextResult;
 import edu.iu.uits.lms.etextmanager.model.ETextResultsBatch;
 import edu.iu.uits.lms.etextmanager.model.ETextToolConfig;
 import edu.iu.uits.lms.etextmanager.model.ETextUser;
+import edu.iu.uits.lms.etextmanager.repository.ETextResultRepository;
 import edu.iu.uits.lms.etextmanager.repository.ETextResultsBatchRepository;
 import edu.iu.uits.lms.etextmanager.repository.ETextToolConfigRepository;
 import edu.iu.uits.lms.etextmanager.repository.ETextUserRepository;
@@ -85,6 +87,9 @@ import java.io.Serializable;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.MessageFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -112,6 +117,9 @@ public class ETextService {
     private ETextResultsBatchRepository eTextResultsBatchRepository;
 
     @Autowired
+    private ETextResultRepository eTextResultRepository;
+
+    @Autowired
     private BackgroundMessageSender backgroundMessageSender;
 
     @Autowired
@@ -137,6 +145,8 @@ public class ETextService {
 
     @Autowired
     private FreeMarkerConfigurer freemarkerConfigurer;
+
+    private static final DateTimeFormatter TIME_STAMP_PATTERN = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
 
     private static final DefaultPrettyPrinter PRETTY_PRINTER = new DefaultPrettyPrinter();
 
@@ -204,20 +214,20 @@ public class ETextService {
                     ETextToolConfig eTextToolConfig = eTextToolConfigRepository.findByToolName(entry.getKey());
                     switch (eTextToolConfig.getToolType()) {
                         case COURSE_13_PLACEMENT -> {
-                            allResults.addAll(handle13CoursePlacement(eTextToolConfig, entry.getValue(), filename, courseMap));
+                            allResults.addAll(handle13CoursePlacement(eTextToolConfig, entry.getValue(), filename, courseMap, resultsBatch));
                         }
                         case ROOT_13_PLACEMENT -> {
-                            allResults.addAll(handleRootPlacement(eTextToolConfig, entry.getValue(), filename, courseMap));
+                            allResults.addAll(handleRootPlacement(eTextToolConfig, entry.getValue(), filename, courseMap, resultsBatch));
                         }
                         case MODULE_PLACEMENT -> {
-                            allResults.addAll(handleModulePlacement(eTextToolConfig, entry.getValue(), filename, courseMap));
+                            allResults.addAll(handleModulePlacement(eTextToolConfig, entry.getValue(), filename, courseMap, resultsBatch));
                         }
                         case COURSE_11_PLACEMENT -> {
-                            allResults.addAll(handle11CoursePlacement(eTextToolConfig, entry.getValue(), filename, courseMap));
+                            allResults.addAll(handle11CoursePlacement(eTextToolConfig, entry.getValue(), filename, courseMap, resultsBatch));
                         }
                         case COURSE_11_AND_MODULE_PLACEMENT -> {
-                            allResults.addAll(handle11CoursePlacement(eTextToolConfig, entry.getValue(), filename, courseMap));
-                            allResults.addAll(handleModulePlacement(eTextToolConfig, entry.getValue(), filename, courseMap));
+                            allResults.addAll(handle11CoursePlacement(eTextToolConfig, entry.getValue(), filename, courseMap, resultsBatch));
+                            allResults.addAll(handleModulePlacement(eTextToolConfig, entry.getValue(), filename, courseMap, resultsBatch));
                         }
                         default -> {
                             throw new IllegalStateException("Unexpected value: " + eTextToolConfig.getToolType());
@@ -225,7 +235,8 @@ public class ETextService {
                     }
                 } catch (Exception e) {
                     String message = "Unable to process data for " + entry.getKey();
-                    ETextResult result = new ETextResult("", filename);
+                    ETextResult result = new ETextResult("", filename, resultsBatch);
+                    result.setStatus(ETextResult.STATUS.FAIL);
                     result.setMessage(message);
                     allResults.add(result);
                     log.error(message, e);
@@ -247,7 +258,7 @@ public class ETextService {
      * @return List of results
      */
     private List<ETextResult> handle13CoursePlacement(ETextToolConfig eTextToolConfig, List<ETextCsv> data,
-                                                      String filename, Map<String, String> courseMap) {
+                                                      String filename, Map<String, String> courseMap, ETextResultsBatch resultsBatch) {
         ConfigSettings configSettings = eTextToolConfig.getJsonBody();
         List<ETextResult> results = new ArrayList<>();
 
@@ -256,7 +267,8 @@ public class ETextService {
 
         for (ETextCsv row : data) {
             List<String> resultMessages = new ArrayList<>();
-            ETextResult result = new ETextResult(eTextToolConfig.getToolName(), filename);
+            boolean hasError = false;
+            ETextResult result = new ETextResult(eTextToolConfig.getToolName(), filename, resultsBatch);
             result.setSisCourseId(row.getSisCourseId());
 
             try {
@@ -264,13 +276,13 @@ public class ETextService {
                         new RequiredField("csv: new tool name", row.getNewName()),
                         new RequiredField("config: context id", eTextToolConfig.getContextId()));
 
+                result.setInputNewName(row.getNewName());
                 ltiSettings.setName(row.getNewName());
                 ExternalTool externalTool = null;
                 try {
                     String courseId = courseIdLookup(row.getSisCourseId(), courseMap);
-                    if (courseId != null) {
-                        result.setCanvasCourseId(courseId);
-                    }
+                    result.setCanvasCourseId(courseId);
+
                     externalTool = externalToolsService.getExternalToolByName("sis_course_id:" + row.getSisCourseId(), row.getNewName(), "course_navigation");
                     if (externalTool == null) {
                         externalTool = externalToolsService.createExternalToolForCourse("sis_course_id:" + row.getSisCourseId(), eTextToolConfig.getContextId());
@@ -278,9 +290,13 @@ public class ETextService {
                         resultMessages.add("Using existing course nav placement");
                     }
                     result.setToolId(externalTool.getId());
+                } catch (CourseLookupException e) {
+                    resultMessages.add(e.getMessage());
+                    hasError = true;
                 } catch (Exception e) {
                     log.error("Error in step 1 of handle13CoursePlacement", e);
                     resultMessages.add("Error in step 1: " + e.getMessage());
+                    hasError = true;
                 }
                 if (externalTool != null) {
                     try {
@@ -290,12 +306,15 @@ public class ETextService {
                     } catch (Exception e) {
                         log.error("Error in step 2 of handle13CoursePlacement", e);
                         resultMessages.add("Error in step 2: " + e.getMessage());
+                        hasError = true;
                     }
                 }
             } catch (MissingFieldException mfe) {
                 resultMessages.add("Missing required field(s): " + StringUtils.join(mfe.getMissingFields(), ", "));
+                hasError = true;
             }
             result.setMessage(StringUtils.join(resultMessages, "; "));
+            result.setStatus(hasError ? ETextResult.STATUS.FAIL : ETextResult.STATUS.SUCCESS);
             results.add(result);
 
         }
@@ -312,7 +331,7 @@ public class ETextService {
      * @return List of results
      */
     private List<ETextResult> handle11CoursePlacement(ETextToolConfig eTextToolConfig, List<ETextCsv> data,
-                                                      String filename, Map<String, String> courseMap) {
+                                                      String filename, Map<String, String> courseMap, ETextResultsBatch resultsBatch) {
         ConfigSettings configSettings = eTextToolConfig.getJsonBody();
         List<ETextResult> results = new ArrayList<>();
 
@@ -320,7 +339,8 @@ public class ETextService {
 
         for (ETextCsv row : data) {
             List<String> resultMessages = new ArrayList<>();
-            ETextResult result = new ETextResult(eTextToolConfig.getToolName(), filename);
+            boolean hasError = false;
+            ETextResult result = new ETextResult(eTextToolConfig.getToolName(), filename, resultsBatch);
             result.setSisCourseId(row.getSisCourseId());
 
             try {
@@ -328,19 +348,20 @@ public class ETextService {
                         new RequiredField("csv: new tool name", row.getNewName()),
                         new RequiredField("config: lti consumer key", ltiSettings.getConsumerKey()));
 
+                result.setInputNewName(row.getNewName());
                 ltiSettings.setName(row.getNewName());
                 String secret = toolConfig.getToolSecrets().get(ltiSettings.getConsumerKey());
                 if (secret != null) {
                     ltiSettings.setSharedSecret(secret);
                 } else {
                     resultMessages.add("Unable to locate shared secret for the given consumer key: " + ltiSettings.getConsumerKey());
+                    hasError = true;
                 }
 
                 try {
                     String courseId = courseIdLookup(row.getSisCourseId(), courseMap);
-                    if (courseId != null) {
-                        result.setCanvasCourseId(courseId);
-                    }
+                    result.setCanvasCourseId(courseId);
+
                     ExternalTool externalTool = externalToolsService.getExternalToolByName("sis_course_id:" + row.getSisCourseId(), row.getNewName(), "course_navigation");
                     if (externalTool == null) {
                         externalTool = externalToolsService.createExternalToolForCourse("sis_course_id:" + row.getSisCourseId(), ltiSettings);
@@ -359,22 +380,29 @@ public class ETextService {
                             try {
                                 ExternalTool externalTool2 = externalToolsService.updateExternalToolForCourse(canvasService.getBaseUrl(), "sis_course_id:" + row.getSisCourseId(), externalTool.getId(), courseNavLtiSettings);
                                 if (externalTool2 != null) {
-                                    resultMessages.add("Adding course nav");
+                                    resultMessages.add("Updated lti settings");
                                 }
                             } catch (Exception e) {
                                 log.error("Error in step 2 of handle11CoursePlacement", e);
                                 resultMessages.add("Error in step 2: " + e.getMessage());
+                                hasError = true;
                             }
                         }
                     }
+                } catch (CourseLookupException e) {
+                    resultMessages.add(e.getMessage());
+                    hasError = true;
                 } catch (Exception e) {
                     resultMessages.add("Error in step 1: " + e.getMessage());
                     log.error("Error in step 1 of handle11CoursePlacement", e);
+                    hasError = true;
                 }
             } catch (MissingFieldException mfe) {
                 resultMessages.add("Missing required field(s): " + StringUtils.join(mfe.getMissingFields(), ", "));
+                hasError = true;
             }
             result.setMessage(StringUtils.join(resultMessages, "; "));
+            result.setStatus(hasError ? ETextResult.STATUS.FAIL : ETextResult.STATUS.SUCCESS);
             results.add(result);
 
         }
@@ -391,14 +419,15 @@ public class ETextService {
      * @return List of results
      */
     private List<ETextResult> handleRootPlacement(ETextToolConfig eTextToolConfig, List<ETextCsv> data,
-                                                  String filename, Map<String, String> courseMap) {
+                                                  String filename, Map<String, String> courseMap, ETextResultsBatch resultsBatch) {
         ConfigSettings configSettings = eTextToolConfig.getJsonBody();
         List<ETextResult> results = new ArrayList<>();
 
         CanvasTab tab = SerializationUtils.clone(configSettings.getCanvasTab());
 
         for (ETextCsv row : data) {
-            ETextResult result = new ETextResult(eTextToolConfig.getToolName(), filename);
+            boolean hasError = false;
+            ETextResult result = new ETextResult(eTextToolConfig.getToolName(), filename, resultsBatch);
             result.setSisCourseId(row.getSisCourseId());
 
             try {
@@ -407,25 +436,30 @@ public class ETextService {
 
                 try {
                     String courseId = courseIdLookup(row.getSisCourseId(), courseMap);
-                    if (courseId != null) {
-                        result.setCanvasCourseId(courseId);
-                    }
+                    result.setCanvasCourseId(courseId);
+
                     if (tab.getHidden()) {
                         courseService.hideCourseTool("sis_course_id:" + row.getSisCourseId(), eTextToolConfig.getContextId());
                     } else {
                         courseService.showCourseTool("sis_course_id:" + row.getSisCourseId(), eTextToolConfig.getContextId());
                     }
                     result.setMessage("Success");
+                } catch (CourseLookupException e) {
+                    result.setMessage(e.getMessage());
+                    hasError = true;
                 } catch (Exception e) {
                     result.setMessage("Error enabling tool: " + e.getMessage());
                     log.error("error in handle", e);
+                    hasError = true;
                 }
                 result.setToolId(eTextToolConfig.getContextId());
 
             } catch (MissingFieldException mfe) {
                 result.setMessage("Missing required field(s): " + StringUtils.join(mfe.getMissingFields(), ", "));
+                hasError = true;
             }
 
+            result.setStatus(hasError ? ETextResult.STATUS.FAIL : ETextResult.STATUS.SUCCESS);
             results.add(result);
         }
 //        log.debug("{}", results);
@@ -441,7 +475,7 @@ public class ETextService {
      * @return List of results
      */
     private List<ETextResult> handleModulePlacement(ETextToolConfig eTextToolConfig, List<ETextCsv> data,
-                                                    String filename, Map<String, String> courseMap) {
+                                                    String filename, Map<String, String> courseMap, ETextResultsBatch resultsBatch) {
         ConfigSettings configSettings = eTextToolConfig.getJsonBody();
         List<ETextResult> results = new ArrayList<>();
 
@@ -451,7 +485,8 @@ public class ETextService {
 
         for (ETextCsv row : data) {
             List<String> resultMessages = new ArrayList<>();
-            ETextResult result = new ETextResult(eTextToolConfig.getToolName(), filename);
+            boolean hasError = false;
+            ETextResult result = new ETextResult(eTextToolConfig.getToolName(), filename, resultsBatch);
             result.setSisCourseId(row.getSisCourseId());
 
             try {
@@ -463,10 +498,11 @@ public class ETextService {
 
                 Module module = null;
                 try {
+                    result.setInputPressbookTitle(row.getPressbookTitle());
+                    result.setInputPressbookLink(row.getPressbookLink());
                     String courseId = courseIdLookup(row.getSisCourseId(), courseMap);
-                    if (courseId != null) {
-                        result.setCanvasCourseId(courseId);
-                    }
+                    result.setCanvasCourseId(courseId);
+
                     module = moduleService.getModuleByName("sis_course_id:" + row.getSisCourseId(), configSettings.getModule().getName());
                     if (module == null) {
                         module = moduleService.createModule("sis_course_id:" + row.getSisCourseId(), mcw);
@@ -474,9 +510,13 @@ public class ETextService {
                         resultMessages.add("Found existing module with matching title");
                     }
                     result.setToolId(module.getId());
+                } catch (CourseLookupException e) {
+                    resultMessages.add(e.getMessage());
+                    hasError = true;
                 } catch (Exception e) {
                     resultMessages.add("Error in step 1: " + e.getMessage());
                     log.error("Error in step 1", e);
+                    hasError = true;
                 }
                 if (module != null) {
                     try {
@@ -504,6 +544,7 @@ public class ETextService {
                                     resultMessages.add("Success");
                                 } else {
                                     resultMessages.add("Error in step 3");
+                                    hasError = true;
                                 }
                             }
                         } else {
@@ -514,13 +555,16 @@ public class ETextService {
                     } catch (Exception e) {
                         resultMessages.add("Error in step 2: " + e.getMessage());
                         log.error("Error in step 2", e);
+                        hasError = true;
                     }
                 }
             } catch (MissingFieldException mfe) {
                 resultMessages.add("Missing required field(s): " + StringUtils.join(mfe.getMissingFields(), ", "));
+                hasError = true;
             }
 
             result.setMessage(StringUtils.join(resultMessages, "; "));
+            result.setStatus(hasError ? ETextResult.STATUS.FAIL : ETextResult.STATUS.SUCCESS);
             results.add(result);
 
         }
@@ -555,7 +599,13 @@ public class ETextService {
                 EmailDetails details = new EmailDetails();
                 details.setRecipients(emailAddresses);
 
-                details.setSubject(emailService.getStandardHeader() + " eText processing status");
+                //[LMS PRD Notifications] eText processing status for file(s) filename1.csv, filename2.csv
+
+                String filenames = batch.getResults().stream().map(ETextResult::getFilename)
+                        .distinct().sorted()
+                        .collect(Collectors.joining(", "));
+
+                details.setSubject(emailService.getStandardHeader() + " eText processing status for file(s) " + filenames);
                 details.setBody(body);
                 details.setEnableHtml(true);
 
@@ -598,6 +648,7 @@ public class ETextService {
      */
     public List<ETextResultsBatch> getResultBatches() {
         return (List<ETextResultsBatch>) eTextResultsBatchRepository.findAll();
+//        return eTextResultsBatchRepository.findBatchResults(false);
     }
 
     /**
@@ -614,14 +665,19 @@ public class ETextService {
      * @param courseMap Map of already looked up courses
      * @return Canvas course id of the found course, null if no course exists
      */
-    private String courseIdLookup(String sisCourseId, Map<String, String> courseMap) {
-        return courseMap.computeIfAbsent(sisCourseId, key -> {
+    private String courseIdLookup(String sisCourseId, Map<String, String> courseMap) throws CourseLookupException {
+        String canvasCourseId = courseMap.computeIfAbsent(sisCourseId, key -> {
             Course course = courseService.getCourse("sis_course_id:" + key);
             if (course != null) {
                 return course.getId();
             }
             return null;
         });
+
+        if (canvasCourseId == null) {
+            throw new CourseLookupException("Error looking up canvas course", sisCourseId);
+        }
+        return canvasCourseId;
     }
 
     /**
@@ -660,6 +716,75 @@ public class ETextService {
         // Merge the updated fields with the existing fields
         existing.mergeEditableFields(eTextToolConfig);
         eTextToolConfigRepository.save(existing);
+    }
+
+    private static ETextCsv convertResultToCsv(ETextResult etr) {
+        return new ETextCsv(etr.getTool(), etr.getInputNewName(), etr.getSisCourseId(), etr.getInputPressbookTitle(), etr.getInputPressbookLink());
+    }
+
+    public void processFailedResultBatchJob() {
+        // Look for failed placements
+        List<ETextResult> failedActiveResults = eTextResultRepository.findActiveResultsByStatus(ETextResult.STATUS.FAIL.name());
+
+        List<ETextCsv> parsedCsv = failedActiveResults.stream()
+                .map(ETextService::convertResultToCsv)
+                .toList();
+
+        String filename = MessageFormat.format("batch_retry_{0}.csv", TIME_STAMP_PATTERN.format(LocalDateTime.now()));
+
+        // Process them again
+        processCsvData("BATCH", Collections.singleton(new BackgroundMessage.FileGroup(filename, parsedCsv)));
+    }
+
+    public void processResetCourseBatchJob() {
+        // Look for potential reset courses
+        List<ETextResult> successfulActiveResults = eTextResultRepository.findActiveResultsByStatus(ETextResult.STATUS.SUCCESS.name());
+
+        List<CourseIds> courseIds = successfulActiveResults.stream()
+                .map(etr -> new CourseIds(etr.getSisCourseId(), etr.getCanvasCourseId()))
+                .distinct()
+                .toList();
+
+        log.debug("Existing: {}", courseIds);
+        // Find course ids that have changed
+        Map<String, String> updatedCourseIds = getUpdatedCourseIds(courseIds);
+        log.debug("Updated: {}", updatedCourseIds);
+
+        List<ETextCsv> parsedCsv = successfulActiveResults.stream()
+                .filter(etr -> updatedCourseIds.containsKey(etr.getSisCourseId()))
+                .map(ETextService::convertResultToCsv)
+                .toList();
+
+        String filename = MessageFormat.format("batch_reset_{0}.csv", TIME_STAMP_PATTERN.format(LocalDateTime.now()));
+
+        // Process them again
+        processCsvData("BATCH", Collections.singleton(new BackgroundMessage.FileGroup(filename, parsedCsv)));
+
+    }
+
+    /**
+     * Validate the course id pairs to see if they still match the current ids in canvas. If not, return an updated list.
+     * @param courseIds
+     */
+    private Map<String, String> getUpdatedCourseIds(List<CourseIds> courseIds) {
+        Map<String, String> courseMap = new HashMap<>();
+        Map<String, String> changedCourseMap = new HashMap<>();
+
+        for (CourseIds idPair : courseIds) {
+            try {
+                String canvasCourseId = courseIdLookup(idPair.getSisCourseId(), courseMap);
+                if (!canvasCourseId.equals(idPair.getCanvasCourseId())) {
+                    changedCourseMap.putIfAbsent(idPair.getSisCourseId(), canvasCourseId);
+                }
+            } catch (CourseLookupException e) {
+                log.warn("Course not found in canvas: {}; Skipping for now", e.getSisCourseId());
+            }
+        }
+        return changedCourseMap;
+    }
+
+    public int archiveResults(List<Long> ids, boolean archived) {
+        return eTextResultRepository.updateResults(ids, archived);
     }
 
     /**
