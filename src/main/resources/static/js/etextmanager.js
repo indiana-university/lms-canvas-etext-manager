@@ -154,7 +154,7 @@
                                            disabled: 'disabled'
                                        }
                                    },
-                                   { extend: 'spacer', text: '0 selected', style: 'users-selected-text' }
+                                   { extend: 'spacer', text: '0 selected', style: 'rows-selected-text' }
                                ],
                            },
                        },
@@ -179,7 +179,7 @@
                 table.on('select deselect user-select filter-update draw', function () {
                     // Update selected counts after row (de)selections and filters
                     // The draw event catches the regular search filtering
-                    userSelectedCounter();
+                    rowsSelectedCounter();
                 });
            });
        }
@@ -188,10 +188,10 @@
 
 }());
 
-function userSelectedCounter() {
+function rowsSelectedCounter() {
     // Get all the selected checkboxes, except the "select-all" one up in the table header
     let newValue = document.querySelectorAll('input.dt-select-checkbox:checked:not(.header-checkbox)').length;
-    $(".users-selected-text").text(newValue + ' selected');
+    $(".rows-selected-text").text(newValue + ' selected');
 
     // enable/disable buttons while we're in here
     if (newValue > 0) {
