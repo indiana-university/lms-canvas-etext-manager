@@ -47,18 +47,26 @@
             $(innerDivId).empty();
             $(innerDivId).load(urlBase, function( response, status, xhr ) {
                 $('#config-loader').toggleClass('rvt-display-none');
-                $('#toolInfoTable').DataTable({
+                let table = $('#toolInfoTable').DataTable({
                     columnDefs: [{ targets: [3,4], orderable: false }],
-                    dom: '<"rvt-button-group rvt-m-bottom-md"B><lfrtip>',
-                    buttons: [
-                        {
-                            text: 'New Config', className: 'rvt-button',
-                            attr: {
-                                'data-rvt-dialog-trigger': 'edit-tool-properties-new'
-                            }
-                        }
-                    ]
+                    layout: {
+                       top1Start: {
+                           buttons: {
+                               name: 'newConfig',
+                               buttons: [
+                               {
+                                   text: 'New Config', className: 'rvt-button',
+                                   attr: {
+                                       'data-rvt-dialog-trigger': 'edit-tool-properties-new'
+                                   }
+                               }
+                               ]
+                           },
+                       },
+                   },
                 });
+                // Add extra styling for the button group as there wasn't an obvious way to do it on the button group itself
+                table.buttons('newConfig', null).containers().addClass('rvt-button-group rvt-items-center');
             });
         } else if (tabId === 'report-panel') {
            $('#reports-loader').toggleClass('rvt-display-none');
@@ -72,7 +80,7 @@
 
                // Track the column index before things get rendered/hidden so we can use it when customizing the data export
                let targetColForExportManipulation = $('th.colNotes').index();
-               var table = $('#appTable').DataTable({
+               let table = $('#appTable').DataTable({
                    order: [[$('th.colResultId').index(), 'desc'],[$('th.colTool').index(), 'asc']],
                    language: {
                       // Setting the text for the search label, mostly to remove the colon that is there by default
