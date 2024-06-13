@@ -47,6 +47,10 @@
             $(innerDivId).empty();
             $(innerDivId).load(urlBase, function( response, status, xhr ) {
                 $('#config-loader').toggleClass('rvt-display-none');
+
+                // DataTables sorting defaults to third click removing sorting. This sets it to asc/desc only
+                DataTable.defaults.column.orderSequence = ['asc', 'desc'];
+
                 let table = $('#toolInfoTable').DataTable({
                     columnDefs: [{ targets: [3,4], orderable: false }],
                     layout: {
@@ -77,6 +81,9 @@
                // Customize a few of the search input related wrapper classes
                DataTable.ext.classes.search.input = 'rvt-m-left-xs';
                DataTable.ext.classes.search.container = 'rvt-p-top-md search-wrapper';
+
+               // DataTables sorting defaults to third click removing sorting. This sets it to asc/desc only
+               DataTable.defaults.column.orderSequence = ['asc', 'desc'];
 
                // Track the column index before things get rendered/hidden so we can use it when customizing the data export
                let targetColForExportManipulation = $('th.colNotes').index();
