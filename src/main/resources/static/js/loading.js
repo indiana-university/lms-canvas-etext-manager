@@ -61,8 +61,8 @@ function buttonLoading(button, formSubmit = true) {
         });
         jqxhr.fail(function(result) {
             // Show error message
-            $(".bad-config-reason", "#" + jqForm.attr("id")).text(result.responseJSON.message);
-            $(".config-error", "#" + jqForm.attr("id")).removeClass("rvt-display-none");
+            $(".error-reason", "#" + jqForm.attr("id")).text(result.responseJSON.message);
+            $(".error-div", "#" + jqForm.attr("id")).removeClass("rvt-display-none");
 
             // Re-activate buttons and stuff
             for(var i = 0; i < buttonsToDisable.length; i++) {

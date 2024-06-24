@@ -33,21 +33,50 @@ package edu.iu.uits.lms.etextmanager.model;
  * #L%
  */
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.ToString;
+import org.springframework.data.rest.core.annotation.RestResource;
 
 import javax.persistence.Column;
-import javax.persistence.Embeddable;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
+import javax.persistence.ForeignKey;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
 
-@Embeddable
+@Entity
+@Table(name = "ETEXT_RESULTS")
+@SequenceGenerator(name = "ETEXT_RESULT_ID_SEQ", sequenceName = "ETEXT_RESULT_ID_SEQ", allocationSize = 1)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @RequiredArgsConstructor
+@EqualsAndHashCode(exclude = {"batch"})
+@ToString(exclude = {"batch"})
 public class ETextResult {
+
+    public enum STATUS {
+        SUCCESS,
+        FAIL,
+        LEGACY
+    }
+
+    @Id
+    @GeneratedValue(generator = "ETEXT_RESULT_ID_SEQ")
+    @Column(name = "ETEXT_RESULT_ID")
+    private Long id;
 
     @NonNull
     @Column(name = "TOOL")
@@ -71,5 +100,41 @@ public class ETextResult {
 
     @Column(name = "MESSAGE")
     private String message;
+
+    @Column(name = "ARCHIVED")
+    private boolean archived;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "STATUS")
+    private STATUS status;
+
+    @Column(name = "INPUT_NEW_NAME")
+    private String inputNewName;
+
+    @Column(name = "INPUT_PRESSBOOK_TITLE")
+    private String inputPressbookTitle;
+
+    @Column(name = "INPUT_PRESSBOOK_LINK")
+    private String inputPressbookLink;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ETEXT_RESULTS_BATCH_ID", foreignKey = @ForeignKey(name = "FK_etext_results_batch"))
+    @RestResource(exported = false)
+    @JsonIgnore
+    @NonNull
+    private ETextResultsBatch batch;
+
+    /**
+     * Gets called from the UI
+     * @return
+     */
+    public String iconCssClass() {
+        String cssClass = "rvt-color-gold-300";
+        switch (status) {
+            case FAIL -> cssClass = "rvt-color-crimson-400";
+            case SUCCESS -> cssClass = "rvt-color-green-400";
+        }
+        return cssClass;
+    }
 
 }

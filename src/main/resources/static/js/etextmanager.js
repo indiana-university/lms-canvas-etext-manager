@@ -30,7 +30,6 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
-// Placeholder js file
 
 (function() {
     var token = $('#_csrf').attr('content');
@@ -48,84 +47,173 @@
             $(innerDivId).empty();
             $(innerDivId).load(urlBase, function( response, status, xhr ) {
                 $('#config-loader').toggleClass('rvt-display-none');
-                $('#toolInfoTable').DataTable({
+
+                // DataTables sorting defaults to third click removing sorting. This sets it to asc/desc only
+                DataTable.defaults.column.orderSequence = ['asc', 'desc'];
+
+                let table = $('#toolInfoTable').DataTable({
                     columnDefs: [{ targets: [3,4], orderable: false }],
-                    dom: '<"rvt-button-group rvt-m-bottom-md"B><lfrtip>',
-                    buttons: [
-                        {
-                            text: 'New Config', className: 'rvt-button',
-                            attr: {
-                                'data-rvt-dialog-trigger': 'edit-tool-properties-new'
-                            }
-                        }
-                    ]
+                    layout: {
+                       top1Start: {
+                           buttons: {
+                               name: 'newConfig',
+                               buttons: [
+                               {
+                                   text: 'New Config', className: 'rvt-button',
+                                   attr: {
+                                       'data-rvt-dialog-trigger': 'edit-tool-properties-new'
+                                   }
+                               }
+                               ]
+                           },
+                       },
+                   },
                 });
-                var tooltable = $('#toolInfoTable').DataTable();
-                tooltable.columns.adjust().draw();
+                // Add extra styling for the button group as there wasn't an obvious way to do it on the button group itself
+                table.buttons('newConfig', null).containers().addClass('rvt-button-group rvt-items-center');
             });
         } else if (tabId === 'report-panel') {
            $('#reports-loader').toggleClass('rvt-display-none');
            $(innerDivId).empty();
            $(innerDivId).load(urlBase, function( response, status, xhr ) {
                $('#reports-loader').toggleClass('rvt-display-none');
-               $('#appTable').DataTable({
-                   dom: '<"rvt-button-group rvt-m-bottom-md"<"button-heading rvt-ts-23 rvt-text-bold">B><lfrtip>',
-                   buttons: [{ extend: 'csv', text: 'Download Report', className: 'rvt-button' }],
-                   orderCellsTop: true,
-                   order: [[0, 'desc'],[4, 'asc']],
+
+               // Customize a few of the search input related wrapper classes
+               DataTable.ext.classes.search.input = 'rvt-m-left-xs';
+               DataTable.ext.classes.search.container = 'rvt-p-top-md search-wrapper';
+
+               // DataTables sorting defaults to third click removing sorting. This sets it to asc/desc only
+               DataTable.defaults.column.orderSequence = ['asc', 'desc'];
+
+               // Track the column index before things get rendered/hidden so we can use it when customizing the data export
+               let targetColForExportManipulation = $('th.colNotes').index();
+               let table = $('#appTable').DataTable({
+                   order: [[$('th.colResultId').index(), 'desc'],[$('th.colTool').index(), 'asc']],
+                   language: {
+                      // Setting the text for the search label, mostly to remove the colon that is there by default
+                      search: 'Search',
+                      select: {
+                         aria: {
+                             headerCheckbox: 'Select all records'
+                         }
+                      }
+                  },
+                 lmsAlly: {
+                     checkLabelTargetSelector: 'span.chkLabelDesc'
+                 },
                    columnDefs: [
-                         { targets: [3, 7, 8], className: 'limited-column-width' },
-                         { targets: [9], orderable: false }
+                         {
+                             targets: ['.colCheckbox'],
+                             orderable: false,
+                             // Get the column indexes containing the data that will be used for the checkbox value and name
+                             render: DataTable.render.select('.' + $('th.colResultId').index(), '.' + $('th.colCheckboxName').index())
+                         },
+                         { targets: ['.colFilename', '.colToolId', '.colDeploymentId'], className: 'limited-column-width' },
+                         { targets: ['.colNotes'], orderable: false },
+                         {
+                             // Enabling filters for these columns
+                             targets: ['.colUploader', '.colDate', '.colFilename','.colTool', '.colSisCourseId'],
+                             lmsFilters: true
+                         },
+                         {
+                            targets: ['.colResultId', '.colBatch', '.colToolId', 'colCheckboxName'], visible: false
+                         },
+                         {
+                            targets: ['.colArchived'], visible: false,
+                            lmsFilters: {
+                                defaultValue: 'false'
+                            }
+                         },
                        ],
                    initComplete: function () {
-                       this.api()
-                       .columns('.selectFilter')
-                       .every(function () {
-                           var column = this;
-                           var select = $('<select class="rvt-select"><option value="">All</option></select>')
-                               .appendTo($("#appTable thead tr:eq(1) th").eq(column.index()).empty())
-                               .on('change', function () {
-                                   column.search($(this).val(), { exact: true }).draw();
-                               })
-                               .on( 'click' , function (evt) {
-                                   evt.stopPropagation();
-                               });
-                           var colData = column.data().unique();
-                           var hasReverseHeaderClass = $(column.header()).hasClass('selectFilterReverse')
-                           var hasNumericSortHeaderClass = $(column.header()).hasClass('numericSort')
-                           if (hasNumericSortHeaderClass) {
-                               // Numeric sort
-                               colData.sort((a, b) => a - b);
-                           } else {
-                               // Regular string sort
-                               colData.sort();
-                           }
-
-                           if (hasReverseHeaderClass) {
-                               colData.reverse();
-                           }
-                           colData.each(function (d, j) {
-                               select.append('<option value="' + d + '">' + d + '</option>');
-                           });
-                       });
-                       this.api()
-                       .columns('.inputFilter')
-                       .every(function () {
-                           let column = this;
-                           var textinput = $('<input type="text" class="rvt-text-input" placeholder="Date">')
-                               .appendTo($("#appTable thead tr:eq(1) th").eq(column.index()).empty())
-                               .on('keyup', function () {
-                                   column.search(this.value).draw();
-                               });
-                       })
                        $('#appTable').wrap("<div style='overflow:auto;width:100%;position:relative;'></div>");
+                   },
+                   select: {
+                        selector: 'th:first-child',
+                        style: 'multi',
+                        info: false
+                   },
+                   layout: {
+                       top2Start: {
+                           buttons: {
+                                name: 'downloadReport',
+                                buttons: [
+                                   { extend: 'spacer', text: 'View report', style: 'rvt-ts-23 rvt-text-bold' },
+                                   { extend: 'csv', text: 'Download Report', className: 'rvt-button',
+                                        exportOptions: {
+                                            columns: ['.exportable'],
+                                            format: {
+                                                body: function ( data, row, column, node, type ) {
+                                                    let modData = data;
+                                                    // Remove this "extra" span in this particular column that was sr-only,
+                                                    // but would have its content linger when the tags were stripped
+                                                    if (column == targetColForExportManipulation) {
+                                                        modData = data.replace($(node).find('span.exportIgnore').prop('outerHTML'), '').trim();
+                                                    }
+                                                    // Strip out any html (normally the default behavior)
+                                                    return $.fn.DataTable.Buttons.stripData( modData, null );
+                                                }
+                                            }
+                                        }
+                                   },
+                                   { extend: 'spacer', style: 'bar' },
+                                   {
+                                       name: 'bulkArchive',
+                                       text: 'Bulk Archive',
+                                       className: 'rvt-button rvt-button--secondary modalButton',
+                                       attr: {
+                                           id: 'asdf',
+                                           'data-rvt-dialog-trigger': 'archive-confirmation',
+                                           'aria-describedby': 'users-selected-lower',
+                                           'aria-disabled': true,
+                                           disabled: 'disabled'
+                                       }
+                                   },
+                                   { extend: 'spacer', text: '0 selected', style: 'rows-selected-text' }
+                               ],
+                           },
+                       },
+                       top1Start: {
+                           // Configuration for the filters
+                           lmsFilters: {
+                               containerClass: 'rvt-flex-md-up rvt-p-bottom-sm rvt-wrap',
+                               includeClearFilters: true
+                           }
+                       },
+                   },
+                   headerCallback: function(thead, data, start, end, display) {
+                        // Mark the autogenerated checkbox that ends up in the header with a special class, so it can be excluded from actual selected rows
+                        $(thead).find('input[type=checkbox]').addClass('header-checkbox');
                    }
                });
-               var table = $('#appTable').DataTable();
-               table.columns.adjust().draw();
+
+                // Add extra styling for the button group as there wasn't an obvious way to do it on the button group itself
+                table.buttons('downloadReport', null).containers().addClass('rvt-button-group rvt-items-center');
+
+                // Adding event listeners so that we can update controls based on "external" events
+                table.on('select deselect user-select filter-update draw', function () {
+                    // Update selected counts after row (de)selections and filters
+                    // The draw event catches the regular search filtering
+                    rowsSelectedCounter();
+                });
            });
        }
     }, false);
 
 
 }());
+
+function rowsSelectedCounter() {
+    // Get all the selected checkboxes, except the "select-all" one up in the table header
+    let newValue = document.querySelectorAll('input.dt-select-checkbox:checked:not(.header-checkbox)').length;
+    $(".rows-selected-text").text(newValue + ' selected');
+
+    // enable/disable buttons while we're in here
+    if (newValue > 0) {
+        $(".modalButton").removeAttr('disabled');
+        $(".modalButton").attr('aria-disabled', 'false');
+    } else {
+        $(".modalButton").attr('disabled', '');
+        $(".modalButton").attr('aria-disabled', 'true');
+    }
+}

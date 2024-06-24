@@ -59,11 +59,11 @@
 
     <div class="rvt-tabs" data-rvt-tabs="etext-tabset">
         <div class="rvt-tabs__tablist" aria-label="eText tabs" data-rvt-tablist>
-            <button class="rvt-tabs__tab" data-rvt-tab>Upload CSV</button>
-            <button class="rvt-tabs__tab" data-rvt-tab>View Report</button>
-            <button class="rvt-tabs__tab" data-rvt-tab>Tool Info</button>
+            <button class="rvt-tabs__tab" data-rvt-tab="upload-panel">Upload CSV</button>
+            <button class="rvt-tabs__tab" data-rvt-tab="report-panel">View Report</button>
+            <button class="rvt-tabs__tab" data-rvt-tab="config-panel">Tool Info</button>
         </div>
-        <div id="upload-panel" class="rvt-tabs__panel" data-rvt-tab-panel th:attr="data-rvt-tab-init=${activeTab == 'upload-panel'} ? 'data-rvt-tab-init' : ''">
+        <div id="upload-panel" class="rvt-tabs__panel" data-rvt-tab-panel="upload-panel">
             <span class="rvt-ts-23 rvt-text-bold">Upload a CSV</span>
             <p>
                 Use the header listed below. You do not need to fill in every column with data, depending on the type of
@@ -99,7 +99,7 @@
                 </div>
             </form>
         </div>
-        <div id="report-panel" class="rvt-tabs__panel" data-rvt-tab-panel th:attr="data-urlbase=@{/app/reports},data-rvt-tab-init=${activeTab == 'report-panel'} ? 'data-rvt-tab-init' : ''" data-inner-div-id="#reportsDiv">
+        <div id="report-panel" class="rvt-tabs__panel" data-rvt-tab-panel="report-panel" th:attr="data-urlbase=@{/app/reports}" data-inner-div-id="#reportsDiv">
             <div id="reports-loader" class="rvt-display-none">
                 <div class="rvt-flex rvt-justify-center">
                     <div class="rvt-loader rvt-loader--lg" aria-label="Content loading"></div>
@@ -107,7 +107,7 @@
             </div>
             <div id="reportsDiv"></div>
         </div>
-        <div id="config-panel" class="rvt-tabs__panel" data-rvt-tab-panel th:attr="data-urlbase=@{/app/toolConfigs},data-rvt-tab-init=${activeTab == 'config-panel'} ? 'data-rvt-tab-init' : ''" data-inner-div-id="#toolConfigDiv">
+        <div id="config-panel" class="rvt-tabs__panel" data-rvt-tab-panel="config-panel" th:attr="data-urlbase=@{/app/toolConfigs}" data-inner-div-id="#toolConfigDiv">
             <div id="config-loader" class="rvt-display-none">
                 <div class="rvt-flex rvt-justify-center">
                     <div class="rvt-loader rvt-loader--lg" aria-label="Content loading"></div>
@@ -120,6 +120,9 @@
 </div>
 <th:block layout:fragment="script">
     <script type="text/javascript" th:src="@{/app/js/loading.js}"></script>
+    <script th:if="${activeTab != 'upload-panel'}">
+        document.querySelector('.rvt-tabs').activateTab('[[${activeTab}]]')
+    </script>
 </th:block>
 </body>
 </html>

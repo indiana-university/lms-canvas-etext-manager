@@ -33,31 +33,14 @@ package edu.iu.uits.lms.etextmanager.model;
  * #L%
  */
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 
 @Data
 @AllArgsConstructor
-@NoArgsConstructor
-public class ETextCsv implements Serializable {
-
-    @JsonProperty("Tool")
-    private String tool;
-
-    @JsonProperty("New Name")
-    private String newName;
-
-    @JsonProperty("SIS Course ID")
+public class CourseIds implements Serializable {
     private String sisCourseId;
-
-    @JsonProperty("Pressbook Title")
-    private String pressbookTitle;
-
-    @JsonProperty("Pressbook Link")
-    private String pressbookLink;
-
+    private String canvasCourseId;
 }

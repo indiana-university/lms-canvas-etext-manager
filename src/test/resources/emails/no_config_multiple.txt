@@ -35,7 +35,7 @@ Status summary for eText Upload Processing (CI)
   <dd>ROW-TIMESTAMP</dd>
 </dl>
 
-Processed eTexts with the following 2 entries:
+Processed eTexts with the following 4 entries:
 <table>
 <thead>
 <tr>
@@ -49,6 +49,24 @@ Processed eTexts with the following 2 entries:
 </tr>
 </thead>
 <tbody>
+    <tr>
+        <td>normal2.csv</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td>Unable to process data for tool1</td>
+    </tr>
+    <tr>
+        <td>normal2.csv</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td>Unable to process data for tool2</td>
+    </tr>
     <tr>
         <td>normal.csv</td>
         <td></td>

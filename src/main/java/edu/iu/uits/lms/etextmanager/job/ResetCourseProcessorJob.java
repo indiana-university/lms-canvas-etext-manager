@@ -1,4 +1,4 @@
-package edu.iu.uits.lms.etextmanager.repository;
+package edu.iu.uits.lms.etextmanager.job;
 
 /*-
  * #%L
@@ -33,27 +33,56 @@ package edu.iu.uits.lms.etextmanager.repository;
  * #L%
  */
 
-import edu.iu.uits.lms.etextmanager.model.ETextResultsBatch;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.PagingAndSortingRepository;
-import org.springframework.data.repository.query.Param;
-import org.springframework.data.rest.core.annotation.Description;
-import org.springframework.data.rest.core.annotation.RepositoryRestResource;
+import edu.iu.uits.lms.common.batch.BatchJob;
+import edu.iu.uits.lms.etextmanager.service.ETextService;
+import edu.iu.uits.lms.iuonly.model.errorcontact.ErrorContactPostForm;
+import edu.iu.uits.lms.iuonly.services.ErrorContactServiceImpl;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.CrossOrigin;
 
-import java.util.List;
+import java.io.IOException;
 
+@Slf4j
 @Component
-@RepositoryRestResource(path = "etext_results_batch",
-        itemResourceDescription = @Description("asdf asdf"),
-        collectionResourceDescription = @Description("qwerty qwerty"))
-@Tag(name = "ETextResultsBatchRepository", description = "Operations involving the ETextResultsBatch table")
-@CrossOrigin(origins = {"${lms.swagger.cors.origin}"})
-public interface ETextResultsBatchRepository extends PagingAndSortingRepository<ETextResultsBatch, Long> {
+@Profile("resetcourseprocessing")
+public class ResetCourseProcessorJob implements BatchJob {
 
-    @Query("from ETextResultsBatch b left join b.results r where r.archived = :archived")
-    List<ETextResultsBatch> findBatchResults(@Param("archived") boolean archived);
+    @Autowired
+    private ETextService eTextService;
 
+    @Autowired
+    private ConfigurableApplicationContext ctx;
+
+    @Autowired
+    private ErrorContactServiceImpl errorContactService;
+
+    private void process() throws IOException {
+        log.info("ResetCourseProcessorJob running!");
+        eTextService.processResetCourseBatchJob();
+    }
+
+    @Override
+    public void run() {
+
+        try {
+            process();
+        } catch (Exception e) {
+            log.error("Caught exception during ResetCourseProcessorJob processing", e);
+
+            ErrorContactPostForm errorContactPostForm = new ErrorContactPostForm();
+            errorContactPostForm.setJobCode(getJobCode());
+            errorContactPostForm.setMessage("The eText ResetCourseProcessorJob has unexpectedly failed");
+
+            errorContactService.postEvent(errorContactPostForm);
+        }
+
+        ctx.close();
+    }
+
+    public String getJobCode() {
+        return "eTextResetCourseProcessorJob";
+    }
 }

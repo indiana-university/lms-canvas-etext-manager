@@ -28,7 +28,7 @@ Status summary for eText Upload Processing (${env})
 
 <dl>
   <dt>Batch ID</dt>
-  <dd>${batch.id}</dd>
+  <dd><#if env == 'CI'>ROW-BATCH_ID<#else>${batch.id}</#if></dd>
   <dt>Uploader</dt>
   <dd>${batch.uploader!''}</dd>
   <dt>Date</dt>

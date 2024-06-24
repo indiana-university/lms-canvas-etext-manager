@@ -44,6 +44,8 @@ import edu.iu.uits.lms.etextmanager.config.BackgroundMessageSender;
 import edu.iu.uits.lms.etextmanager.config.PostgresDBConfig;
 import edu.iu.uits.lms.etextmanager.config.ToolConfig;
 import edu.iu.uits.lms.etextmanager.model.ETextCsv;
+import edu.iu.uits.lms.etextmanager.model.ETextResult;
+import edu.iu.uits.lms.etextmanager.repository.ETextResultRepository;
 import edu.iu.uits.lms.etextmanager.repository.ETextResultsBatchRepository;
 import edu.iu.uits.lms.etextmanager.repository.ETextToolConfigRepository;
 import edu.iu.uits.lms.etextmanager.repository.ETextUserRepository;
@@ -53,6 +55,7 @@ import edu.iu.uits.lms.iuonly.services.BatchEmailServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -76,6 +79,7 @@ import java.util.List;
 import java.util.Set;
 
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @DataJpaTest
 @Import({ToolConfig.class, PostgresDBConfig.class})
@@ -94,7 +98,10 @@ public class ETextServiceTest {
     private ETextToolConfigRepository eTextToolConfigRepository;
 
     @Autowired
-    private ETextResultsBatchRepository eTextResultsRepository;
+    private ETextResultsBatchRepository eTextResultsBatchRepository;
+
+    @Autowired
+    private ETextResultRepository eTextResultRepository;
 
     @MockBean
     private BackgroundMessageSender backgroundMessageSender;
@@ -128,19 +135,15 @@ public class ETextServiceTest {
 
     private static final String USER1 = "user1";
 
-//    @BeforeEach
-//    void setUp() {
-////        when(toolConfig.getDefaultEmails()).thenReturn(new String[] {"asdf@asdf.asdf"});
-//    }
+    @BeforeEach
+    void setUp() {
+        when(emailService.getStandardHeader()).thenReturn("CI");
+    }
 
     @Test
     void testUploadNoConfig() throws Exception {
         Set<BackgroundMessage.FileGroup> fileGroups = new HashSet<>();
-        String fileName = "normal.csv";
-        InputStream fileStream = getUploadedFile(fileName);
-        List<ETextCsv> parsedCsv = CsvUtil.parseCsv(fileStream, ETextCsv.class);
-        BackgroundMessage.FileGroup fg = new BackgroundMessage.FileGroup(fileName, parsedCsv);
-        fileGroups.add(fg);
+        fileGroups.add(buildFileGroup("normal.csv"));
 
         eTextService.processCsvData(USER1, fileGroups);
         verify(emailService).sendEmail(emailCaptor.capture());
@@ -149,6 +152,45 @@ public class ETextServiceTest {
         Assertions.assertNotNull(emailDetails);
 
         Assertions.assertEquals(getEmailContent("no_config.txt"), emailDetails.getBody());
+        Assertions.assertEquals("CI eText processing status for file(s) normal.csv", emailDetails.getSubject());
+    }
+
+
+    @Test
+    void testUploadNoConfigMultipleFiles() throws Exception {
+        Set<BackgroundMessage.FileGroup> fileGroups = new HashSet<>();
+        fileGroups.add(buildFileGroup("normal.csv"));
+        fileGroups.add(buildFileGroup("normal2.csv"));
+
+        eTextService.processCsvData(USER1, fileGroups);
+        verify(emailService).sendEmail(emailCaptor.capture());
+
+        EmailDetails emailDetails = emailCaptor.getValue();
+        Assertions.assertNotNull(emailDetails);
+
+        Assertions.assertEquals(getEmailContent("no_config_multiple.txt"), emailDetails.getBody());
+        Assertions.assertEquals("CI eText processing status for file(s) normal.csv, normal2.csv", emailDetails.getSubject());
+    }
+
+    private BackgroundMessage.FileGroup buildFileGroup(String fileName) throws IOException {
+        InputStream fileStream = getUploadedFile(fileName);
+        List<ETextCsv> parsedCsv = CsvUtil.parseCsv(fileStream, ETextCsv.class);
+        BackgroundMessage.FileGroup fg = new BackgroundMessage.FileGroup(fileName, parsedCsv);
+        return fg;
+    }
+
+    @Test
+    void testStuff() {
+//        List<ETextResult> failedActiveResults = eTextService.findFailedActiveResults();
+
+//        List<ETextResult> intermediateResults = eTextResultRepository.findIntermediateResults();
+//        log.debug("**********************");
+//        log.debug("{}", intermediateResults);
+
+        List<ETextResult> failedActiveResults = eTextResultRepository.findActiveResultsByStatus(ETextResult.STATUS.FAIL.name());
+        log.debug("!!!!!!!!!!!!!!!!!!!!!!");
+        log.debug("{}", failedActiveResults);
+        Assertions.assertEquals(1, failedActiveResults.size());
     }
 
     @Test
@@ -174,6 +216,7 @@ public class ETextServiceTest {
         Assertions.assertNotNull(emailDetails);
 
         Assertions.assertEquals(getEmailContent("good_full.txt"), emailDetails.getBody());
+        Assertions.assertEquals("asdf", emailDetails.getSubject());
     }
 
 //    private ETextToolConfig createRootToolConfig() throws Exception {

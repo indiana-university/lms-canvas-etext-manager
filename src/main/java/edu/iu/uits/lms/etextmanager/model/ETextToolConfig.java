@@ -118,9 +118,9 @@ public class ETextToolConfig implements Serializable {
      */
     public void mergeEditableFields(ETextToolConfig editable) {
         if (editable != null) {
-            this.toolName = editable.getToolName();
+            this.toolName = editable.getToolName().trim();
             this.toolType = editable.getToolType();
-            this.contextId = editable.getContextId();
+            this.contextId = editable.getContextId().trim();
             this.jsonBody = editable.getJsonBody();
         }
     }

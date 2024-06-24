@@ -40,56 +40,96 @@
 </head>
 <body>
 <div th:fragment="reports">
-    <table id="appTable" class="rvt-table-stripes full-table-width">
-        <caption class="rvt-sr-only">Table with reports of various uploads</caption>
-        <thead>
-        <tr>
-            <th scope="col" class="selectFilter selectFilterReverse numericSort">Batch ID</th>
-            <th scope="col" class="selectFilter">Uploader</th>
-            <th scope="col" class="inputFilter">Date</th>
-            <th scope="col" class="selectFilter">Filename</th>
-            <th scope="col" class="selectFilter">Tool</th>
-            <th scope="col" class="selectFilter">SIS Course ID</th>
-            <th scope="col">Canvas Course ID</th>
-            <th scope="col">Tool ID</th>
-            <th scope="col">Deployment ID</th>
-            <th scope="col">Notes</th>
-        </tr>
-        <tr>
-            <th>Batch ID</th>
-            <th>Uploader</th>
-            <th>Date</th>
-            <th>Filename</th>
-            <th>Tool</th>
-            <th>SIS Course ID</th>
-            <th></th>
-            <th></th>
-            <th></th>
-            <th></th>
-        </tr>
-        </thead>
-        <tbody>
-        <th:block th:each="resultBatch : ${batches}">
-        <tr th:each="result : ${resultBatch.results}">
-            <th scope="row" th:text="${resultBatch.id}">batch id</th>
-            <td th:text="${resultBatch.uploader}">username</td>
-            <td th:text="${#dates.format(resultBatch.runDate, 'yyyy-MM-dd')}">2024-01-14</td>
-            <td th:text="${result.filename}">file.csv</td>
-            <td th:text="${result.tool}">Kritik</td>
-            <td th:text="${result.sisCourseId}">FA23-BL-COLL-C103-5621</td>
-            <td th:text="${result.canvasCourseId}">2165416</td>
-            <td th:text="${result.toolId}">458050</td>
-            <td th:text="${result.deploymentId}">458050:e6e723abdeb5a64d7b8163b045c8259372e42f02</td>
-            <td>
-                <button class="rvt-button rvt-button--plain hover_focus" th:title="${result.message}">
-                    <rvt-icon name="note" class="rvt-color-gold-300"></rvt-icon>
-                    <span class="rvt-sr-only" th:text="${result.message}"></span>
-                </button>
-            </td>
-        </tr>
-        </th:block>
-        </tbody>
-    </table>
+    <span id="sortingAnnc" class="rvt-sr-only" aria-live="polite"></span>
+    <span id="searchText" hidden>Search for data within the table of results</span>
+    <form id="etext-reports-form" th:action="@{|/app/reports/archive|}" method="post">
+        <div th:id="'error-div.' + ${id}" class="error-div rvt-inline-alert rvt-inline-alert--standalone rvt-inline-alert--danger rvt-m-bottom-sm rvt-display-none">
+                <span class="rvt-inline-alert__icon">
+                    <svg fill="currentColor" width="16" height="16" viewBox="0 0 16 16"><path d="m8 6.586-2-2L4.586 6l2 2-2 2L6 11.414l2-2 2 2L11.414 10l-2-2 2-2L10 4.586l-2 2Z"></path><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0ZM2 8a6 6 0 1 1 12 0A6 6 0 0 1 2 8Z"></path></svg>
+                </span>
+            <span class="rvt-inline-alert__message" id="bad-config-message">There was a problem archiving the records.  <span th:id="'error-reason-' + ${id}" class="error-reason">placeholder</span></span>
+        </div>
+        <table id="appTable" class="rvt-table-stripes full-table-width">
+            <caption class="rvt-sr-only">Table with reports of various uploads</caption>
+            <thead>
+            <tr>
+                <td class="colCheckbox checkboxColumn" />
+                <th scope="col" class="colResultId exportable">Result ID</th>
+                <th scope="col" class="colBatch exportable">Batch ID</th>
+                <th scope="col" class="colArchived">Archived</th>
+                <th scope="col" class="colUploader exportable">Uploader</th>
+                <th scope="col" class="colDate exportable">Date</th>
+                <th scope="col" class="colFilename exportable">Filename</th>
+                <th scope="col" class="colTool exportable">Tool</th>
+                <th scope="col" class="colSisCourseId exportable">SIS Course ID</th>
+                <th scope="col" class="colCourseId exportable">Canvas Course ID</th>
+                <th scope="col" class="colToolId exportable">Tool ID</th>
+                <th scope="col" class="colDeploymentId exportable">Deployment ID</th>
+                <th scope="col" class="colNotes exportable">Notes</th>
+                <th scope="col" class="colCheckboxName"></th>
+            </tr>
+            </thead>
+            <tbody>
+            <th:block th:each="resultBatch : ${batches}">
+            <tr th:each="result : ${resultBatch.results}">
+                <th scope="row" class="checkboxColumn rowCheckbox" />
+                <td th:text="${result.id}">result id</td>
+                <td th:text="${resultBatch.id}">batch id</td>
+                <td th:text="${result.archived}">true</td>
+                <td th:text="${resultBatch.uploader}">username</td>
+                <td th:text="${#dates.format(resultBatch.runDate, 'yyyy-MM-dd')}">2024-01-14</td>
+                <td th:text="${result.filename}">file.csv</td>
+                <td th:text="${result.tool}">Kritik</td>
+                <td th:text="${result.sisCourseId}">FA23-BL-COLL-C103-5621</td>
+                <td th:text="${result.canvasCourseId}">2165416</td>
+                <td th:text="${result.toolId}">458050</td>
+                <td th:text="${result.deploymentId}">458050:e6e723abdeb5a64d7b8163b045c8259372e42f02</td>
+                <td>
+                    <span th:id="|row-id-${result.id}|" th:text="${result.id}" class="rvt-sr-only chkLabelDesc exportIgnore"></span>
+                    <button type="button" class="rvt-button rvt-button--plain hover_focus" th:title="${result.message}">
+                        <rvt-icon name="note" th:class="${result.iconCssClass()}"></rvt-icon>
+                        <span class="rvt-sr-only" th:text="${result.message}"></span>
+                    </button>
+                </td>
+                <td>bulkArchive</td>
+            </tr>
+            </th:block>
+            </tbody>
+        </table>
+
+        <!-- dialog box -->
+        <div class="rvt-dialog rvt-dialog-override"
+             id="archive-confirmation"
+             role="dialog"
+             tabindex="-1"
+             aria-modal="true"
+             aria-labelledby="archive-confirmation-dialog"
+             aria-describedby="archive-confirmation-dialog-description"
+             data-rvt-dialog="archive-confirmation"
+             data-rvt-dialog-darken-page
+             data-rvt-dialog-disable-page-interaction
+             hidden>
+            <div class="rvt-dialog__inner">
+                <header class="rvt-dialog__header">
+                    <h1 class="rvt-dialog__title" id="archive-confirmation-dialog">Archive Records</h1>
+                </header>
+                <div class="rvt-dialog__body rvt-dialog__body-override">
+                    <p class="rvt-text-bold" id="archive-confirmation-dialog-description">Are you sure you want to archive these records?</p>
+                    <ul class="rvt-list-plain modal-list"></ul>
+                </div>
+                <div class="rvt-dialog__controls">
+                    <button id="dialog-cancel" type="button" class="rvt-button rvt-button--secondary" data-rvt-dialog-close="archive-confirmation">Cancel</button>
+                    <button id="dialog-submit" type="button" class="rvt-button" onclick="buttonLoading(this)" data-form-id="etext-reports-form">
+                        <span class="rvt-button__content">Yes, archive</span>
+                        <div id="remove-users-loader" class="rvt-loader rvt-loader--xs rvt-display-none"></div>
+                        <span aria-live="polite">
+                                <span id="remove-users-sr-text" class="rvt-sr-only rvt-display-none">Archiving records</span>
+                            </span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
 </div>
 </body>
 </html>
