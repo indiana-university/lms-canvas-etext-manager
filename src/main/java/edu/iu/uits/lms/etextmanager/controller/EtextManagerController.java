@@ -35,8 +35,9 @@ package edu.iu.uits.lms.etextmanager.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.iu.uits.lms.common.session.CourseSessionService;
 import edu.iu.uits.lms.etextmanager.model.ConfigSettings;
-import edu.iu.uits.lms.etextmanager.model.ETextResultsBatch;
+import edu.iu.uits.lms.etextmanager.model.ETextResult;
 import edu.iu.uits.lms.etextmanager.model.ETextToolConfig;
 import edu.iu.uits.lms.etextmanager.service.ETextService;
 import edu.iu.uits.lms.lti.LTIConstants;
@@ -76,9 +77,16 @@ public class EtextManagerController extends OidcTokenAwareController {
     @Autowired
     private ObjectMapper objectMapper = null;
 
+    @Autowired
+    private CourseSessionService courseSessionService = null;
+
+    private static final String COURSE_ID = "COURSE-123";
+
+    private static final String SHOW_ARCHIVED_KEY = "show-type";
+
     @RequestMapping(value = "/launch")
     @Secured(LTIConstants.INSTRUCTOR_AUTHORITY)
-    public String launch(Model model, HttpSession httpSession) {
+    public String launch(Model model) {
         OidcAuthenticationToken token = getTokenWithoutContext();
 
         OidcTokenUtils oidcTokenUtils = new OidcTokenUtils(token);
@@ -134,10 +142,18 @@ public class EtextManagerController extends OidcTokenAwareController {
 
     @GetMapping(value = "/reports")
     @Secured(LTIConstants.INSTRUCTOR_AUTHORITY)
-    public String loadReports(Model model) {
+    public String loadReports(Model model, HttpSession httpSession) {
         OidcAuthenticationToken token = getTokenWithoutContext();
-        List<ETextResultsBatch> resultBatches = eTextService.getResultBatches();
-        model.addAttribute("batches", resultBatches);
+
+        String showArchiveType = courseSessionService.getAttributeFromSession(httpSession, COURSE_ID, SHOW_ARCHIVED_KEY, String.class);
+        if (showArchiveType == null) {
+            showArchiveType = ETextService.ARCHIVED_SHOW_UNARCHIVED;
+            courseSessionService.addAttributeToSession(httpSession, COURSE_ID, SHOW_ARCHIVED_KEY, showArchiveType);
+        }
+
+        List<ETextResult> results = eTextService.getResults(showArchiveType);
+        model.addAttribute("results", results);
+        model.addAttribute("showArchiveType", showArchiveType);
 
         return "fragments/reports :: reports";
     }
@@ -155,6 +171,17 @@ public class EtextManagerController extends OidcTokenAwareController {
             log.error("Error archiving results", e);
             return ResponseEntity.badRequest().body(new PageReload(null, e.getMessage()));
         }
+
+        return ResponseEntity.ok(new PageReload("/app/index?activeTab=report-panel", "success"));
+    }
+
+    @PostMapping("/reports/showarchived")
+    @Secured(LTIConstants.INSTRUCTOR_AUTHORITY)
+    public ResponseEntity<PageReload> showArchived(@RequestParam("showArchivedAction") String showArchived, Model model, HttpSession httpSession) {
+        log.debug("in /reports/showarchived");
+        OidcAuthenticationToken token = getTokenWithoutContext();
+
+        courseSessionService.addAttributeToSession(httpSession, COURSE_ID, SHOW_ARCHIVED_KEY, showArchived);
 
         return ResponseEntity.ok(new PageReload("/app/index?activeTab=report-panel", "success"));
     }

@@ -54,19 +54,19 @@
 
     <properties>
         <app.version>${project.version}</app.version>
-        <datatables.version>2.0.3</datatables.version>
+        <datatables.version>2.0.7</datatables.version>
         <datatables-buttons.version>3.0.2</datatables-buttons.version>
-        <datatables-select.version>2.0.0</datatables-select.version>
+        <datatables-select.version>2.0.2</datatables-select.version>
         <frontend-maven-plugin.version>1.11.0</frontend-maven-plugin.version>
-        <git-commit-id-maven-plugin.version>8.0.2</git-commit-id-maven-plugin.version>
+        <git-commit-id-maven-plugin.version>9.0.1</git-commit-id-maven-plugin.version>
         <hibernate5-ddl-maven-plugin.version>3.0.0</hibernate5-ddl-maven-plugin.version>
-        <hypersistence-utils-hibernate-55.version>3.7.5</hypersistence-utils-hibernate-55.version>
+        <hypersistence-utils-hibernate-55.version>3.8.1</hypersistence-utils-hibernate-55.version>
         <java.version>17</java.version>
         <jdk.source>17</jdk.source>
         <jdk.target>17</jdk.target>
         <jquery.version>3.7.1</jquery.version>
 
-        <lms-canvas-rivet.version>5.2.7.0_2</lms-canvas-rivet.version>
+        <lms-canvas-rivet.version>5.2.7.0_3-SNAPSHOT</lms-canvas-rivet.version>
         <lms-embedded-services.version>5.2.35</lms-embedded-services.version>
         <lms-team-spring-boot-it12>5.4.7</lms-team-spring-boot-it12>
 
@@ -75,7 +75,7 @@
         <plugins.javadoc.version>3.6.3</plugins.javadoc.version>
         <plugins.license.version>2.4.0</plugins.license.version>
         <plugins.nexus-staging.version>1.6.13</plugins.nexus-staging.version>
-        <plugins.release.version>3.0.1</plugins.release.version>
+        <plugins.release.version>3.1.0</plugins.release.version>
         <plugins.source.version>3.3.0</plugins.source.version>
         <springdoc-openapi-ui.version>1.8.0</springdoc-openapi-ui.version>
         <spring-cloud-starter-parent.version>2021.0.9</spring-cloud-starter-parent.version>

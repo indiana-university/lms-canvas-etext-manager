@@ -146,6 +146,9 @@ public class ETextService {
     @Autowired
     private FreeMarkerConfigurer freemarkerConfigurer;
 
+    public static final String ARCHIVED_SHOW_ALL = "show-all";
+    public static final String ARCHIVED_SHOW_UNARCHIVED = "show-unarchived";
+
     private static final DateTimeFormatter TIME_STAMP_PATTERN = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
 
     private static final DefaultPrettyPrinter PRETTY_PRINTER = new DefaultPrettyPrinter();
@@ -643,12 +646,17 @@ public class ETextService {
     }
 
     /**
-     * Get all ETextResultsBatch records
-     * @return List of ETextResultsBatch records
+     * Get all ETextResult records
+     * @return List of ETextResult records
      */
-    public List<ETextResultsBatch> getResultBatches() {
-        return (List<ETextResultsBatch>) eTextResultsBatchRepository.findAll();
-//        return eTextResultsBatchRepository.findBatchResults(false);
+    public List<ETextResult> getResults(String showType) {
+        List<ETextResult> results = Collections.emptyList();
+        if (ARCHIVED_SHOW_ALL.equalsIgnoreCase(showType)) {
+            results = eTextResultRepository.findResults(new boolean[]{false, true});
+        } else if (ARCHIVED_SHOW_UNARCHIVED.equalsIgnoreCase(showType)) {
+            results = eTextResultRepository.findResults(new boolean[]{false});
+        }
+        return results;
     }
 
     /**

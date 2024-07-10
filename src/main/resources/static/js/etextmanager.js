@@ -119,10 +119,7 @@
                             targets: ['.colResultId', '.colBatch', '.colToolId', 'colCheckboxName'], visible: false
                          },
                          {
-                            targets: ['.colArchived'], visible: false,
-                            lmsFilters: {
-                                defaultValue: 'false'
-                            }
+                            targets: ['.colArchived'], visible: false
                          },
                        ],
                    initComplete: function () {
@@ -145,10 +142,12 @@
                                             format: {
                                                 body: function ( data, row, column, node, type ) {
                                                     let modData = data;
-                                                    // Remove this "extra" span in this particular column that was sr-only,
-                                                    // but would have its content linger when the tags were stripped
+                                                    // Remove any "extra" elements in this particular column that are sr-only,
+                                                    // but would have the content linger when the tags were stripped
                                                     if (column == targetColForExportManipulation) {
-                                                        modData = data.replace($(node).find('span.exportIgnore').prop('outerHTML'), '').trim();
+                                                        $(node).find('.exportIgnore').each(function(igIndex, igValue) {
+                                                            modData = modData.replace($(igValue).prop('outerHTML'), '').trim();
+                                                        });
                                                     }
                                                     // Strip out any html (normally the default behavior)
                                                     return $.fn.DataTable.Buttons.stripData( modData, null );
@@ -169,7 +168,20 @@
                                            disabled: 'disabled'
                                        }
                                    },
-                                   { extend: 'spacer', text: '0 selected', style: 'rows-selected-text' }
+                                   { extend: 'spacer', text: '0 selected', style: 'rows-selected-text' },
+                                   { extend: 'spacer', style: 'bar' },
+                                   { extend: 'spacer', text: 'View archived records', style: 'rvt-ts-23' },
+                                   {
+                                      text: '<span class="rvt-switch__on">On</span><span class="rvt-switch__off">Off</span>',
+                                      className: 'rvt-switch rvt-switch--small',
+                                      attr: {
+                                          id: 'archive-switch',
+                                          'data-rvt-switch': 'archive-switch',
+                                          'aria-label': 'View archived records',
+                                          'data-formid': 'show-archived-form',
+                                          role: 'switch'
+                                      }
+                                   }
                                ],
                            },
                        },
@@ -190,6 +202,11 @@
                 // Add extra styling for the button group as there wasn't an obvious way to do it on the button group itself
                 table.buttons('downloadReport', null).containers().addClass('rvt-button-group rvt-items-center');
 
+                let showArchiveStatus = $('#show-archived-action').val();
+                if ('show-all' === showArchiveStatus) {
+                    table.buttons('downloadReport', '#archive-switch').nodes().attr('data-rvt-switch-on', 'true');
+                }
+
                 // Adding event listeners so that we can update controls based on "external" events
                 table.on('select deselect user-select filter-update draw', function () {
                     // Update selected counts after row (de)selections and filters
@@ -200,6 +217,21 @@
        }
     }, false);
 
+    // Listener for turning the "show archived" switch on
+    document.addEventListener('rvtSwitchToggledOn', event => {
+        if (event.srcElement.getAttribute("id") == 'archive-switch') {
+            $('#show-archived-action').attr('value', 'show-all');
+            buttonLoading(event.srcElement);
+        }
+    }, false);
+
+    // Listener for turning the "show archived" switch off
+    document.addEventListener('rvtSwitchToggledOff', event => {
+        if (event.srcElement.getAttribute("id") == 'archive-switch') {
+            $('#show-archived-action').attr('value', 'show-unarchived');
+            buttonLoading(event.srcElement);
+        }
+    }, false);
 
 }());
 
