@@ -80,6 +80,9 @@ public class EtextManagerController extends OidcTokenAwareController {
     @Autowired
     private CourseSessionService courseSessionService = null;
 
+    /*
+     * This tool is only ever going to be placed in one course, so using this static course id as a key into the course session service
+     */
     private static final String COURSE_ID = "COURSE-123";
 
     private static final String SHOW_ARCHIVED_KEY = "show-type";

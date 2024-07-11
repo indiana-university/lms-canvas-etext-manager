@@ -170,14 +170,14 @@
                                    },
                                    { extend: 'spacer', text: '0 selected', style: 'rows-selected-text' },
                                    { extend: 'spacer', style: 'bar' },
-                                   { extend: 'spacer', text: 'View archived records', style: 'rvt-ts-23' },
+                                   { extend: 'spacer', text: 'Include archived records', style: 'rvt-ts-23' },
                                    {
                                       text: '<span class="rvt-switch__on">On</span><span class="rvt-switch__off">Off</span>',
                                       className: 'rvt-switch rvt-switch--small',
                                       attr: {
                                           id: 'archive-switch',
                                           'data-rvt-switch': 'archive-switch',
-                                          'aria-label': 'View archived records',
+                                          'aria-label': 'Include archived records',
                                           'data-formid': 'show-archived-form',
                                           role: 'switch'
                                       }
@@ -200,7 +200,7 @@
                });
 
                 // Add extra styling for the button group as there wasn't an obvious way to do it on the button group itself
-                table.buttons('downloadReport', null).containers().addClass('rvt-button-group rvt-items-center');
+                table.buttons('downloadReport', null).containers().addClass('rvt-button-group rvt-items-center rvt-p-tb-xs');
 
                 let showArchiveStatus = $('#show-archived-action').val();
                 if ('show-all' === showArchiveStatus) {
