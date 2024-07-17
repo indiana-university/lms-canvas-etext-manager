@@ -114,7 +114,7 @@
                 </p>
             </div>
             <div class="rvt-dialog__controls">
-                <button type="button" id="deleteConfig" class="rvt-button" onclick="buttonLoading(this)" th:data-form-id="'form-delete-config-' + ${id}">
+                <button type="button" id="deleteConfig" class="rvt-button" onclick="buttonLoading(this)" th:data-formid="'form-delete-config-' + ${id}">
                     <span class="rvt-button__content">Yes, Delete</span>
                     <div class="rvt-loader rvt-loader--xs rvt-display-none" aria-label="Deleting tool configuration"></div>
                 </button>
@@ -175,7 +175,7 @@
             </div>
             <div class="rvt-dialog__controls">
                 <input th:unless="${id == 'new'}" type="hidden" name="id" th:value="${id}" />
-                <button type="button" id="submitConfig" class="rvt-button" onclick="buttonLoading(this)" th:data-form-id="'form-edit-tool-' + ${id}">
+                <button type="button" id="submitConfig" class="rvt-button" onclick="buttonLoading(this)" th:data-formid="'form-edit-tool-' + ${id}">
                     <span class="rvt-button__content">Save</span>
                     <div class="rvt-loader rvt-loader--xs rvt-display-none" aria-label="Saving tool configuration"></div>
                 </button>
