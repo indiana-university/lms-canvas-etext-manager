@@ -43,8 +43,8 @@
     <meta charset="utf-8" />
     <meta id="_csrf" name="_csrf" th:content="${_csrf.token}"/>
     <meta id="_csrf_header" name="_csrf_header" th:content="${_csrf.headerName}"/>
-    <link rel="stylesheet" type="text/css" th:href="@{/app/jsrivet/rivet.min.css}" />
-    <link rel="stylesheet" type="text/css" th:href="@{/app/jsrivet/rivet-icons.css}"/>
+    <link rel="stylesheet" type="text/css" th:href="@{/app/jsrivet/rivet-core/rivet.min.css}" />
+    <link rel="stylesheet" type="text/css" th:href="@{/app/jsrivet/rivet-icons/rivet-icon-element.css}"/>
     <link rel="stylesheet" type="text/css" th:href="@{/app/webjars/datatables/css/dataTables.dataTables.min.css}"/>
     <link rel="stylesheet" type="text/css" th:href="@{/app/webjars/datatables-select/css/select.dataTables.min.css}"/>
     <link rel="stylesheet" type="text/css" th:href="@{/app/jsrivet/datatables-ext/datatables-ally.css}"/>
@@ -61,9 +61,8 @@
     <div id="footer" th:text="${@serverInfo}"></div>
 </footer>
 
-<script type="text/javascript" th:src="@{/app/jsrivet/rivet.min.js}"></script>
-<script defer th:src="@{/app/jsrivet/rivet-icons.js}"></script>
-<script type="module" th:src="@{/app/jsrivet/rivet-icon-element.js}"></script>
+<script type="text/javascript" th:src="@{/app/jsrivet/rivet-core/rivet.min.js}"></script>
+<script type="module" th:src="@{/app/jsrivet/rivet-icons/rivet-icons.js}"></script>
 <script type="text/javascript" th:src="@{/app/webjars/jquery/jquery.min.js}"></script>
 <script type="text/javascript" th:src="@{/app/webjars/datatables/js/dataTables.min.js}"></script>
 <script type="text/javascript" th:src="@{/app/webjars/datatables-buttons/js/dataTables.buttons.min.js}"></script>

@@ -70,14 +70,13 @@
             </tr>
             </thead>
             <tbody>
-            <th:block th:each="resultBatch : ${batches}">
-            <tr th:each="result : ${resultBatch.results}">
+            <tr th:each="result : ${results}">
                 <th scope="row" class="checkboxColumn rowCheckbox" />
                 <td th:text="${result.id}">result id</td>
-                <td th:text="${resultBatch.id}">batch id</td>
+                <td th:text="${result.batch.id}">batch id</td>
                 <td th:text="${result.archived}">true</td>
-                <td th:text="${resultBatch.uploader}">username</td>
-                <td th:text="${#dates.format(resultBatch.runDate, 'yyyy-MM-dd')}">2024-01-14</td>
+                <td th:text="${result.batch.uploader}">username</td>
+                <td th:text="${#dates.format(result.batch.runDate, 'yyyy-MM-dd')}">2024-01-14</td>
                 <td th:text="${result.filename}">file.csv</td>
                 <td th:text="${result.tool}">Kritik</td>
                 <td th:text="${result.sisCourseId}">FA23-BL-COLL-C103-5621</td>
@@ -85,15 +84,20 @@
                 <td th:text="${result.toolId}">458050</td>
                 <td th:text="${result.deploymentId}">458050:e6e723abdeb5a64d7b8163b045c8259372e42f02</td>
                 <td>
-                    <span th:id="|row-id-${result.id}|" th:text="${result.id}" class="rvt-sr-only chkLabelDesc exportIgnore"></span>
-                    <button type="button" class="rvt-button rvt-button--plain hover_focus" th:title="${result.message}">
-                        <rvt-icon name="note" th:class="${result.iconCssClass()}"></rvt-icon>
-                        <span class="rvt-sr-only" th:text="${result.message}"></span>
-                    </button>
+                    <div class="rvt-button-group">
+                        <span th:id="|row-id-${result.id}|" th:text="${result.id}" class="rvt-sr-only chkLabelDesc exportIgnore"></span>
+                        <button type="button" class="rvt-button rvt-button--plain hover_focus" th:title="${result.message}">
+                            <rvt-icon name="note" th:class="${result.iconCssClass()}"></rvt-icon>
+                            <span class="rvt-sr-only" th:text="${result.message}"></span>
+                        </button>
+                        <button type="button" class="rvt-button rvt-button--plain hover_focus" title="Archived" th:if="${result.archived}">
+                            <rvt-icon name="inbox-complete" class="rvt-color-black"></rvt-icon>
+                            <span class="rvt-sr-only exportIgnore">Archived</span>
+                        </button>
+                    </div>
                 </td>
                 <td>bulkArchive</td>
             </tr>
-            </th:block>
             </tbody>
         </table>
 
@@ -129,6 +133,9 @@
                 </div>
             </div>
         </div>
+    </form>
+    <form id="show-archived-form" th:action="@{|/app/reports/showarchived|}" method="post">
+        <input id="show-archived-action" type="hidden" name="showArchivedAction" th:value="${showArchiveType}" />
     </form>
 </div>
 </body>

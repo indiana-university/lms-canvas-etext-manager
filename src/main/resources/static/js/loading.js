@@ -33,28 +33,31 @@
 
 function buttonLoading(button, formSubmit = true) {
     button.setAttribute("aria-busy", true);
-    var buttonsToDisable = document.getElementsByTagName('button');
+    let buttonsToDisable = document.getElementsByTagName('button');
     for(var i = 0; i < buttonsToDisable.length; i++) {
         buttonsToDisable[i].disabled = true;
     }
     button.classList.add("rvt-button--loading");
-    button.getElementsByTagName('div')[0].classList.remove("rvt-display-none");
+    let buttonDivs = button.getElementsByTagName('div');
+    if (buttonDivs.length > 0) {
+        buttonDivs[0].classList.remove("rvt-display-none");
+    }
 
     if (formSubmit) {
         // FF doesn't need this, but Chrome and Edge do
         // Also, Rivet 2 moves the dialog out of the form ¯\_(ツ)_/¯ so we have to manually get the form by id
         let form;
-        if (button.form) {
-            form = button.form;
-        } else {
-            // the form id will be found in a data attribute
-            const formId = button.dataset.formId;
+        // the form id could be found in a data attribute
+        const formId = button.dataset.formid;
+        if (formId) {
             form = document.getElementById(formId);
+        } else if (button.form) {
+            form = button.form;
         }
 
-        var jqForm = $(form);
+        let jqForm = $(form);
 
-        var jqxhr = $.post(jqForm.attr('action'), jqForm.serialize());
+        let jqxhr = $.post(jqForm.attr('action'), jqForm.serialize());
         jqxhr.done(function(data) {
             // Close dialog and reload base page
             window.location.replace(data.location);
@@ -69,7 +72,10 @@ function buttonLoading(button, formSubmit = true) {
                 buttonsToDisable[i].disabled = false;
             }
             button.classList.remove("rvt-button--loading");
-            button.getElementsByTagName('div')[0].classList.add("rvt-display-none");
+            let buttonDivs = button.getElementsByTagName('div');
+            if (buttonDivs.length > 0) {
+                buttonDivs[0].classList.add("rvt-display-none");
+            }
         });
     }
 }

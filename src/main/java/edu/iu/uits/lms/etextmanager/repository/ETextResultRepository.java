@@ -63,4 +63,7 @@ public interface ETextResultRepository extends PagingAndSortingRepository<ETextR
     @Transactional(transactionManager = "etextmanagerTransactionMgr")
     @Query("update ETextResult set archived = :archived where id in (:idList)")
     int updateResults(@Param("idList") List<Long> idList, @Param("archived") boolean archived);
+
+    @Query("from ETextResult where archived in (:archived)")
+    List<ETextResult> findResults(@Param("archived") boolean[] archived);
 }
