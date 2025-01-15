@@ -69,7 +69,6 @@ import java.util.Date;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-//@TypeDef(name = "json", typeClass = JsonType.class)
 public class ETextToolConfig implements Serializable {
 
     @Id
@@ -88,7 +87,6 @@ public class ETextToolConfig implements Serializable {
     private String contextId;
 
     @Column(name = "JSON_BODY", columnDefinition = "json")
-//    @Type(type = "json")
     @JdbcTypeCode(SqlTypes.JSON)
     private ConfigSettings jsonBody;
 
