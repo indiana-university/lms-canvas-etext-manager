@@ -84,7 +84,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @DataJpaTest
-//@Import({ToolConfig.class, PostgresDBConfig.class})
 @ContextConfiguration(classes = {ToolConfig.class, PostgresDBConfig.class,
         ETextService.class, FreeMarkerConfigurer.class})
 @Sql("/etext.sql")
