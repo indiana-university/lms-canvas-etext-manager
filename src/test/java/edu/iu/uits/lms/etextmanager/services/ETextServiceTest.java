@@ -45,6 +45,7 @@ import edu.iu.uits.lms.etextmanager.config.PostgresDBConfig;
 import edu.iu.uits.lms.etextmanager.config.ToolConfig;
 import edu.iu.uits.lms.etextmanager.model.ETextCsv;
 import edu.iu.uits.lms.etextmanager.model.ETextResult;
+import edu.iu.uits.lms.etextmanager.model.ETextToolConfig;
 import edu.iu.uits.lms.etextmanager.repository.ETextResultRepository;
 import edu.iu.uits.lms.etextmanager.repository.ETextResultsBatchRepository;
 import edu.iu.uits.lms.etextmanager.repository.ETextToolConfigRepository;
@@ -60,14 +61,15 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Import;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 
@@ -82,7 +84,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @DataJpaTest
-@Import({ToolConfig.class, PostgresDBConfig.class})
+//@Import({ToolConfig.class, PostgresDBConfig.class})
+@ContextConfiguration(classes = {ToolConfig.class, PostgresDBConfig.class,
+        ETextService.class, FreeMarkerConfigurer.class})
 @Sql("/etext.sql")
 @ActiveProfiles("etext")
 @Slf4j
@@ -138,6 +142,7 @@ public class ETextServiceTest {
     @BeforeEach
     void setUp() {
         when(emailService.getStandardHeader()).thenReturn("CI");
+        freemarkerConfigurer.setTemplateLoaderPath("classpath:/templates");
     }
 
     @Test

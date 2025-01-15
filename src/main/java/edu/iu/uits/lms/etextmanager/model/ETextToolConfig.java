@@ -39,25 +39,26 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.iu.uits.lms.common.date.DateFormatUtil;
 import edu.iu.uits.lms.etextmanager.service.ETextService;
-import io.hypersistence.utils.hibernate.type.json.JsonType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.Type;
-import org.hibernate.annotations.TypeDef;
+import org.hibernate.type.SqlTypes;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.PrePersist;
-import javax.persistence.PreUpdate;
-import javax.persistence.SequenceGenerator;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
 import java.io.Serializable;
 import java.util.Date;
 
@@ -68,7 +69,7 @@ import java.util.Date;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@TypeDef(name = "json", typeClass = JsonType.class)
+//@TypeDef(name = "json", typeClass = JsonType.class)
 public class ETextToolConfig implements Serializable {
 
     @Id
@@ -87,7 +88,8 @@ public class ETextToolConfig implements Serializable {
     private String contextId;
 
     @Column(name = "JSON_BODY", columnDefinition = "json")
-    @Type(type = "json")
+//    @Type(type = "json")
+    @JdbcTypeCode(SqlTypes.JSON)
     private ConfigSettings jsonBody;
 
     @JsonFormat(pattern = DateFormatUtil.JSON_DATE_FORMAT)
@@ -145,5 +147,4 @@ public class ETextToolConfig implements Serializable {
 
         private String value;
     }
-
 }
