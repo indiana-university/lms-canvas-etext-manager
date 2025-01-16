@@ -39,7 +39,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitHandler;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.support.AmqpHeaders;
+import org.springframework.amqp.support.converter.SimpleMessageConverter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Profile;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
@@ -70,4 +72,10 @@ public class BackgroundMessageListener {
       }
    }
 
+   @Bean
+   public SimpleMessageConverter converter() {
+      SimpleMessageConverter converter = new SimpleMessageConverter();
+      converter.addAllowedListPatterns(BackgroundMessage.class.getName());
+      return converter;
+   }
 }
