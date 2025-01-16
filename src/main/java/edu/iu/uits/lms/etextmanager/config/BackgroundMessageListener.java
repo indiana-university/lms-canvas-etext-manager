@@ -69,5 +69,4 @@ public class BackgroundMessageListener {
          log.error("unable to ack the message from the queue", e);
       }
    }
-
 }

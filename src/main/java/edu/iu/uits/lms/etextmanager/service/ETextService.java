@@ -69,6 +69,7 @@ import edu.iu.uits.lms.iuonly.model.LmsBatchEmail;
 import edu.iu.uits.lms.iuonly.services.BatchEmailServiceImpl;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
+import jakarta.mail.MessagingException;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -80,7 +81,6 @@ import org.springframework.ui.freemarker.FreeMarkerTemplateUtils;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 
-import javax.mail.MessagingException;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
