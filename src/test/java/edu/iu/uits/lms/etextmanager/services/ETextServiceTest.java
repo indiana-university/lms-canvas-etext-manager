@@ -45,13 +45,12 @@ import edu.iu.uits.lms.etextmanager.config.PostgresDBConfig;
 import edu.iu.uits.lms.etextmanager.config.ToolConfig;
 import edu.iu.uits.lms.etextmanager.model.ETextCsv;
 import edu.iu.uits.lms.etextmanager.model.ETextResult;
-import edu.iu.uits.lms.etextmanager.model.ETextToolConfig;
 import edu.iu.uits.lms.etextmanager.repository.ETextResultRepository;
 import edu.iu.uits.lms.etextmanager.repository.ETextResultsBatchRepository;
 import edu.iu.uits.lms.etextmanager.repository.ETextToolConfigRepository;
-import edu.iu.uits.lms.etextmanager.repository.ETextUserRepository;
 import edu.iu.uits.lms.etextmanager.service.CsvUtil;
 import edu.iu.uits.lms.etextmanager.service.ETextService;
+import edu.iu.uits.lms.iuonly.services.AuthorizedUserService;
 import edu.iu.uits.lms.iuonly.services.BatchEmailServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
@@ -61,7 +60,6 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -94,8 +92,8 @@ public class ETextServiceTest {
     @Autowired
     private ETextService eTextService;
 
-    @Autowired
-    private ETextUserRepository eTextUserRepository;
+    @MockBean
+    private AuthorizedUserService authorizedUserService;
 
     @Autowired
     private ETextToolConfigRepository eTextToolConfigRepository;

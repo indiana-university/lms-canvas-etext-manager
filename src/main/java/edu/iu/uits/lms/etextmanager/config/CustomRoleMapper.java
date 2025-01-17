@@ -33,8 +33,8 @@ package edu.iu.uits.lms.etextmanager.config;
  * #L%
  */
 
-import edu.iu.uits.lms.etextmanager.model.ETextUser;
 import edu.iu.uits.lms.etextmanager.service.ETextService;
+import edu.iu.uits.lms.iuonly.model.acl.AuthorizedUser;
 import edu.iu.uits.lms.lti.LTIConstants;
 import edu.iu.uits.lms.lti.repository.DefaultInstructorRoleRepository;
 import edu.iu.uits.lms.lti.service.LmsDefaultGrantedAuthoritiesMapper;
@@ -70,7 +70,7 @@ public class CustomRoleMapper extends LmsDefaultGrantedAuthoritiesMapper {
 
          String rolesString = "NotAuthorized";
 
-         ETextUser user = eTextService.findByUsername(userId);
+         AuthorizedUser user = eTextService.findByUsername(userId);
 
          if (user != null) {
             rolesString = LTIConstants.CANVAS_INSTRUCTOR_ROLE;
