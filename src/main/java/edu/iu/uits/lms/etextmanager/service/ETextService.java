@@ -60,12 +60,12 @@ import edu.iu.uits.lms.etextmanager.model.ETextCsv;
 import edu.iu.uits.lms.etextmanager.model.ETextResult;
 import edu.iu.uits.lms.etextmanager.model.ETextResultsBatch;
 import edu.iu.uits.lms.etextmanager.model.ETextToolConfig;
-import edu.iu.uits.lms.etextmanager.model.ETextUser;
 import edu.iu.uits.lms.etextmanager.repository.ETextResultRepository;
 import edu.iu.uits.lms.etextmanager.repository.ETextResultsBatchRepository;
 import edu.iu.uits.lms.etextmanager.repository.ETextToolConfigRepository;
-import edu.iu.uits.lms.etextmanager.repository.ETextUserRepository;
 import edu.iu.uits.lms.iuonly.model.LmsBatchEmail;
+import edu.iu.uits.lms.iuonly.model.acl.AuthorizedUser;
+import edu.iu.uits.lms.iuonly.services.AuthorizedUserService;
 import edu.iu.uits.lms.iuonly.services.BatchEmailServiceImpl;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
@@ -108,7 +108,7 @@ import java.util.stream.Collectors;
 public class ETextService {
 
     @Autowired
-    private ETextUserRepository eTextUserRepository;
+    private AuthorizedUserService authorizedUserService;
 
     @Autowired
     private ETextToolConfigRepository eTextToolConfigRepository;
@@ -163,10 +163,10 @@ public class ETextService {
     /**
      * Lookup a user from the authorized user table
      * @param username Username of the user attempting to use the tool
-     * @return Found ETextUser, or null
+     * @return Found AuthorizedUser, or null
      */
-    public ETextUser findByUsername(String username) {
-        return eTextUserRepository.findByUsername(username);
+    public AuthorizedUser findByUsername(String username) {
+        return authorizedUserService.findByUsernameAndToolPermission(username, "ETEXT_MANAGER");
     }
 
     /**
