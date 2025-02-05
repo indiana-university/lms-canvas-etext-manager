@@ -166,7 +166,7 @@ public class ETextService {
      * @return Found AuthorizedUser, or null
      */
     public AuthorizedUser findByUsername(String username) {
-        return authorizedUserService.findByUsernameAndToolPermission(username, "ETEXT_MANAGER");
+        return authorizedUserService.findByActiveUsernameAndToolPermission(username, "ETEXT_MANAGER");
     }
 
     /**
