@@ -88,6 +88,10 @@
                // Track the column index before things get rendered/hidden so we can use it when customizing the data export
                let targetColForExportManipulation = $('th.colNotes').index();
                let table = $('#appTable').DataTable({
+                lengthMenu: [
+                           [10, 25, 50, 100, -1],
+                           [10, 25, 50, 100, "All"]
+                       ],
                    order: [[$('th.colResultId').index(), 'desc'],[$('th.colTool').index(), 'asc']],
                    language: {
                       // Setting the text for the search label, mostly to remove the colon that is there by default
