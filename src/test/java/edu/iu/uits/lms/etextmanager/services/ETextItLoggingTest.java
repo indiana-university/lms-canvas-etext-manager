@@ -36,7 +36,6 @@ package edu.iu.uits.lms.etextmanager.services;
 import edu.iu.es.esi.audit.AuditLogger;
 import edu.iu.uits.lms.common.session.CourseSessionService;
 import edu.iu.uits.lms.etextmanager.WebApplication;
-import edu.iu.uits.lms.etextmanager.repository.ETextResultsBatchRepository;
 import edu.iu.uits.lms.etextmanager.service.ETextService;
 import edu.iu.uits.lms.lti.config.TestUtils;
 import edu.iu.uits.lms.lti.repository.DefaultInstructorRoleRepository;
@@ -61,7 +60,6 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import uk.ac.ox.ctl.lti13.nrps.NamesRoleService;
 
