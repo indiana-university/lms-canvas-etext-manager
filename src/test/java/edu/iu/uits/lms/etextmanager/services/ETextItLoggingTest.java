@@ -74,9 +74,11 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(classes = {WebApplication.class})
+@SpringBootTest(classes = {WebApplication.class},
+        properties = {"oauth.tokenprovider.url=http://foo", "lms.rabbitmq.queue_env_suffix=CI",
+                "canvas.host=asdf", "lti.errorcontact.name=asdf", "lti.errorcontact.link=asdf"})
 @AutoConfigureMockMvc
-@ActiveProfiles({"it12"})
+@ActiveProfiles({"etext"})
 @EnableAutoConfiguration(exclude = {HealthContributorAutoConfiguration.class, HealthEndpointAutoConfiguration.class,
         MailHealthContributorAutoConfiguration.class})
 @Slf4j
