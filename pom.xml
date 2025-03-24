@@ -348,6 +348,7 @@
                         <exclude>**/env.properties</exclude>
                         <exclude>**/etextmanager.properties</exclude>
                         <exclude>**/application-etext.properties</exclude>
+                        <exclude>**/application-it12.properties</exclude>
                         <exclude>**/etext.sql</exclude>
                         <exclude>**/logback-test.xml</exclude>
                     </excludes>
