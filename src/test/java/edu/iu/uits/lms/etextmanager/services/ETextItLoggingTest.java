@@ -33,15 +33,17 @@ package edu.iu.uits.lms.etextmanager.services;
  * #L%
  */
 
-import edu.iu.es.esi.audit.AuditLogger;
+import edu.iu.uits.lms.common.cors.CorsSwaggerConfig;
 import edu.iu.uits.lms.common.session.CourseSessionService;
 import edu.iu.uits.lms.etextmanager.WebApplication;
 import edu.iu.uits.lms.etextmanager.service.ETextService;
 import edu.iu.uits.lms.lti.config.TestUtils;
 import edu.iu.uits.lms.lti.repository.DefaultInstructorRoleRepository;
 import io.jsonwebtoken.SignatureAlgorithm;
+import lombok.extern.slf4j.Slf4j;
 import nl.altindag.log.LogCaptor;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.autoconfigure.health.HealthContributorAutoConfiguration;
@@ -77,6 +79,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles({"it12"})
 @EnableAutoConfiguration(exclude = {HealthContributorAutoConfiguration.class, HealthEndpointAutoConfiguration.class,
         MailHealthContributorAutoConfiguration.class})
+@Slf4j
 public class ETextItLoggingTest {
     @Autowired
     private MockMvc mvc;
@@ -99,10 +102,24 @@ public class ETextItLoggingTest {
     @MockBean
     private NamesRoleService namesRoleService;
 
+    @MockBean
+    private CorsSwaggerConfig corsSwaggerConfig;
+
     @Test
     public void testLmsEnhancementToIt12LogExistence() throws Exception {
-        try (LogCaptor logCaptor = LogCaptor.forClass(AuditLogger.class)) {
+        String auditLoggerClassName = "edu.iu.es.esi.audit.AuditLogger";
 
+        Class<?> clazz = null;
+
+        try {
+            clazz = Class.forName(auditLoggerClassName);
+        } catch (ClassNotFoundException classNotFoundException) {
+            log.info("Skipping test because AuditLogger not found");
+        }
+
+        Assumptions.assumeTrue(clazz != null);
+
+        try (LogCaptor logCaptor = LogCaptor.forClass(clazz)) {
             final Jwt jwt = createJwtToken("asdf");
 
             final Collection<GrantedAuthority> authorities = AuthorityUtils.createAuthorityList("SCOPE_lms:rest", "ROLE_LMS_REST_ADMINS");
