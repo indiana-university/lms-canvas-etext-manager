@@ -36,6 +36,7 @@ package edu.iu.uits.lms.etextmanager.services;
 import edu.iu.uits.lms.common.cors.CorsSwaggerConfig;
 import edu.iu.uits.lms.common.session.CourseSessionService;
 import edu.iu.uits.lms.etextmanager.WebApplication;
+import edu.iu.uits.lms.etextmanager.repository.ETextResultsBatchRepository;
 import edu.iu.uits.lms.etextmanager.service.ETextService;
 import edu.iu.uits.lms.lti.config.TestUtils;
 import edu.iu.uits.lms.lti.repository.DefaultInstructorRoleRepository;
@@ -51,6 +52,7 @@ import org.springframework.boot.actuate.autoconfigure.health.HealthEndpointAutoC
 import org.springframework.boot.actuate.autoconfigure.mail.MailHealthContributorAutoConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.context.metrics.buffering.BufferingApplicationStartup;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -76,11 +78,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest(classes = {WebApplication.class},
         properties = {"oauth.tokenprovider.url=http://foo", "lms.rabbitmq.queue_env_suffix=CI",
-                "canvas.host=asdf", "lti.errorcontact.name=asdf", "lti.errorcontact.link=asdf"})
+                      "canvas.host=asdf", "lti.errorcontact.name=asdf", "lti.errorcontact.link=asdf",
+                      "spring.rabbitmq.listener.simple.auto-startup=false", "lms.swagger.cors.origin=123"})
 @AutoConfigureMockMvc
-@ActiveProfiles({"etext"})
+@ActiveProfiles({"etext", "swagger"})
 @EnableAutoConfiguration(exclude = {HealthContributorAutoConfiguration.class, HealthEndpointAutoConfiguration.class,
         MailHealthContributorAutoConfiguration.class})
+@AutoConfigureTestDatabase
 @Slf4j
 public class ETextItLoggingTest {
     @Autowired
@@ -107,9 +111,12 @@ public class ETextItLoggingTest {
     @MockBean
     private CorsSwaggerConfig corsSwaggerConfig;
 
+    @Autowired
+    private ETextResultsBatchRepository eTextResultsBatchRepository;
+
     @Test
     public void testLmsEnhancementToIt12LogExistence() throws Exception {
-        String auditLoggerClassName = "edu.iu.es.esi.audit.AuditLogger";
+        final String auditLoggerClassName = "edu.iu.es.esi.audit.AuditLogger";
 
         Class<?> clazz = null;
 
@@ -133,7 +140,7 @@ public class ETextItLoggingTest {
                             .header(HttpHeaders.USER_AGENT, TestUtils.defaultUseragent())
                             .contentType(MediaType.APPLICATION_JSON)
                             .with(authentication(token)))
-                    .andExpect(status().is5xxServerError());
+                    .andExpect(status().isOk());
 
             final List<String> it12LogEntries = logCaptor.getInfoLogs();
 
