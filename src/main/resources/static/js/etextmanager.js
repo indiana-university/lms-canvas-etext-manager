@@ -193,7 +193,8 @@
                            // Configuration for the filters
                            lmsFilters: {
                                containerClass: 'rvt-flex-md-up rvt-p-bottom-sm rvt-wrap',
-                               includeClearFilters: true
+                               includeClearFilters: true,
+                               descSortOrderFilterNames: ['date']
                            }
                        },
                    },
