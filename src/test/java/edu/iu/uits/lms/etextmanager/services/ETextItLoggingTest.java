@@ -81,7 +81,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
                       "canvas.host=asdf", "lti.errorcontact.name=asdf", "lti.errorcontact.link=asdf",
                       "spring.rabbitmq.listener.simple.auto-startup=false", "lms.swagger.cors.origin=123"})
 @AutoConfigureMockMvc
-@ActiveProfiles({"etext", "swagger"})
+@ActiveProfiles({"etext", "it12", "swagger"})
 @EnableAutoConfiguration(exclude = {HealthContributorAutoConfiguration.class, HealthEndpointAutoConfiguration.class,
         MailHealthContributorAutoConfiguration.class})
 @AutoConfigureTestDatabase
@@ -145,29 +145,48 @@ public class ETextItLoggingTest {
             final List<String> it12LogEntries = logCaptor.getInfoLogs();
 
             Assertions.assertNotNull(it12LogEntries);
-            Assertions.assertEquals(1, it12LogEntries.size());
+            Assertions.assertEquals(2, it12LogEntries.size());
 
-            final String it12LogEntry = it12LogEntries.getFirst();
+            // Find the LMS custom log entry and the base IT12 log entry, just in case the order can't be guaranteed
+            String lmsIt12LogEntry = null;
+            String baseIt12LogEntry = null;
 
-            Assertions.assertNotNull(it12LogEntry);
-            Assertions.assertFalse(it12LogEntry.isEmpty());
+            for (String logEntry : it12LogEntries) {
+                if (logEntry.contains("Successful authorization to uri")) {
+                    lmsIt12LogEntry = logEntry;
+                } else if (logEntry.contains("Successful access to")) {
+                    baseIt12LogEntry = logEntry;
+                }
+            }
 
-            Assertions.assertTrue(it12LogEntry.contains("\"type\":\"successful authorization\""));
-            Assertions.assertTrue(it12LogEntry.contains("\"user\":\"asdf\""));
-            Assertions.assertTrue(it12LogEntry.contains("\"ipAddress\":\"127.0.0.1\""));
-            Assertions.assertTrue(it12LogEntry.contains("\"message\":\"Successful access to " + uriToCall + "\""));
+            // Verify LMS custom log entry
+            Assertions.assertNotNull(lmsIt12LogEntry, "LMS custom log entry should be present");
+            Assertions.assertFalse(lmsIt12LogEntry.isEmpty());
+            Assertions.assertTrue(lmsIt12LogEntry.contains("\"type\":\"successful authorization\""));
+            Assertions.assertTrue(lmsIt12LogEntry.contains("\"user\":\"asdf\""));
+            Assertions.assertTrue(lmsIt12LogEntry.contains("\"ipAddress\":\"127.0.0.1\""));
+            Assertions.assertTrue(lmsIt12LogEntry.contains("\"message\":\"Successful authorization to uri " + uriToCall +
+                    " as asdf with clientId asdf with audience [aud1, aud2] and authorities [LMS_REST_ADMINS] and scopes [lms:rest]\""));
+
+            // Verify base IT12 log entry
+            Assertions.assertNotNull(baseIt12LogEntry, "Base IT12 log entry should be present");
+            Assertions.assertFalse(baseIt12LogEntry.isEmpty());
+            Assertions.assertTrue(baseIt12LogEntry.contains("\"type\":\"successful authorization\""));
+            Assertions.assertTrue(baseIt12LogEntry.contains("\"user\":\"asdf\""));
+            Assertions.assertTrue(baseIt12LogEntry.contains("\"ipAddress\":\"127.0.0.1\""));
+            Assertions.assertTrue(baseIt12LogEntry.contains("\"message\":\"Successful access to " + uriToCall + "\""));
         }
     }
 
-    public static Jwt createJwtToken(String username) {
+    public static Jwt createJwtToken(String client) {
         Jwt jwt = Jwt.withTokenValue("fake-token")
                 .header("typ", "JWT")
-                .header("alg", SignatureAlgorithm.RS256.getValue())
-                .claim("user_name", username)
-                .claim("client_id", username)
+                .claim("user_name", client)
+                .claim("client_id", client)
+                .audience(List.of("aud1", "aud2"))
                 .notBefore(Instant.now())
                 .expiresAt(Instant.now().plus(1, ChronoUnit.HOURS))
-                .subject(username)
+                .subject(client)
                 .build();
 
         return jwt;
