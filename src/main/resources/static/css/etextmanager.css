@@ -73,3 +73,8 @@ span.dt-button-spacer.bar:empty {
   width: 1px;
   padding-left: 0;
 }
+
+/* DataTables column header customization to put the sorting icons on the right */
+table.dataTable th div.dt-column-header {
+    flex-direction: row !important;
+}

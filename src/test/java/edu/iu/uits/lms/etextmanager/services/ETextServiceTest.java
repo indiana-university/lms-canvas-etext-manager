@@ -63,11 +63,11 @@ import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 
@@ -92,7 +92,7 @@ public class ETextServiceTest {
     @Autowired
     private ETextService eTextService;
 
-    @MockBean
+    @MockitoBean
     private AuthorizedUserService authorizedUserService;
 
     @Autowired
@@ -104,25 +104,25 @@ public class ETextServiceTest {
     @Autowired
     private ETextResultRepository eTextResultRepository;
 
-    @MockBean
+    @MockitoBean
     private BackgroundMessageSender backgroundMessageSender;
 
-    @MockBean
+    @MockitoBean
     private CourseService courseService;
 
-    @MockBean
+    @MockitoBean
     private ExternalToolsService externalToolsService;
 
-    @MockBean
+    @MockitoBean
     private CanvasService canvasService;
 
-    @MockBean
+    @MockitoBean
     private ModuleService moduleService;
 
-    @MockBean
+    @MockitoBean
     private EmailService emailService;
 
-    @MockBean
+    @MockitoBean
     private BatchEmailServiceImpl batchEmailService;
 
     @Autowired
@@ -131,7 +131,7 @@ public class ETextServiceTest {
     @Captor
     private ArgumentCaptor<EmailDetails> emailCaptor;
 
-    @MockBean
+    @MockitoBean
     private JwtDecoder jwtDecoder;
 
     private static final String USER1 = "user1";

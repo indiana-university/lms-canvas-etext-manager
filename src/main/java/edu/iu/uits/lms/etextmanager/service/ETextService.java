@@ -64,7 +64,6 @@ import edu.iu.uits.lms.etextmanager.repository.ETextResultRepository;
 import edu.iu.uits.lms.etextmanager.repository.ETextResultsBatchRepository;
 import edu.iu.uits.lms.etextmanager.repository.ETextToolConfigRepository;
 import edu.iu.uits.lms.iuonly.model.LmsBatchEmail;
-import edu.iu.uits.lms.iuonly.model.acl.AuthorizedUser;
 import edu.iu.uits.lms.iuonly.services.AuthorizedUserService;
 import edu.iu.uits.lms.iuonly.services.BatchEmailServiceImpl;
 import freemarker.template.Template;
@@ -161,12 +160,12 @@ public class ETextService {
     }
 
     /**
-     * Lookup a user from the authorized user table
+     * Lookup a user from the authorized user table and see if they are authorized
      * @param username Username of the user attempting to use the tool
-     * @return Found AuthorizedUser, or null
+     * @return True if user is found and authorized, else false
      */
-    public AuthorizedUser findByUsername(String username) {
-        return authorizedUserService.findByActiveUsernameAndToolPermission(username, "ETEXT_MANAGER");
+    public boolean isAuthorized(String username) {
+        return authorizedUserService.isAuthorized(username, "ETEXT_MANAGER");
     }
 
     /**
@@ -508,7 +507,7 @@ public class ETextService {
 
                     module = moduleService.getModuleByName("sis_course_id:" + row.getSisCourseId(), configSettings.getModule().getName());
                     if (module == null) {
-                        module = moduleService.createModule("sis_course_id:" + row.getSisCourseId(), mcw);
+                        module = moduleService.createModule("sis_course_id:" + row.getSisCourseId(), mcw, null);
                     } else {
                         resultMessages.add("Found existing module with matching title");
                     }
@@ -536,7 +535,7 @@ public class ETextService {
                                 module.getId(), mi.getTitle());
 
                         if (moduleItem == null) {
-                            moduleItem = moduleService.createModuleItem("sis_course_id:" + row.getSisCourseId(), module.getId(), micw);
+                            moduleItem = moduleService.createModuleItem("sis_course_id:" + row.getSisCourseId(), module.getId(), micw, null);
 
                             if (moduleItem != null) {
                                 if (configSettings.getPublishModule() != null && configSettings.getPublishModule()) {
