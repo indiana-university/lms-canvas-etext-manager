@@ -41,6 +41,7 @@ import edu.iu.uits.lms.common.server.ServerInfo;
 import edu.iu.uits.lms.common.server.ServerUtils;
 import edu.iu.uits.lms.common.session.EnableCourseSessionService;
 import edu.iu.uits.lms.email.config.EnableEmailClient;
+import edu.iu.uits.lms.errorcontact.config.EnableErrorContactClient;
 import edu.iu.uits.lms.etextmanager.config.ToolConfig;
 import edu.iu.uits.lms.iuonly.config.EnableIuOnlyClient;
 import edu.iu.uits.lms.lti.config.EnableGlobalErrorHandler;
@@ -63,6 +64,7 @@ import java.util.Date;
 @EnableCanvasClient
 @EnableEmailClient
 @EnableIuOnlyClient
+@EnableErrorContactClient
 @EnableConfigurationProperties(GitRepositoryState.class)
 @EnableBatch
 @EnableCourseSessionService(sessionKey = "etext_course_session")

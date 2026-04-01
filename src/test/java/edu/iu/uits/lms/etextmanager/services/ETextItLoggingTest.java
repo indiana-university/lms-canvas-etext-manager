@@ -40,7 +40,6 @@ import edu.iu.uits.lms.etextmanager.repository.ETextResultsBatchRepository;
 import edu.iu.uits.lms.etextmanager.service.ETextService;
 import edu.iu.uits.lms.lti.config.TestUtils;
 import edu.iu.uits.lms.lti.repository.DefaultInstructorRoleRepository;
-import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.extern.slf4j.Slf4j;
 import nl.altindag.log.LogCaptor;
 import org.junit.jupiter.api.Assertions;
@@ -55,7 +54,6 @@ import org.springframework.boot.context.metrics.buffering.BufferingApplicationSt
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.GrantedAuthority;
@@ -64,6 +62,7 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import uk.ac.ox.ctl.lti13.nrps.NamesRoleService;
 
@@ -77,8 +76,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(classes = {WebApplication.class},
-        properties = {"oauth.tokenprovider.url=http://foo", "lms.rabbitmq.queue_env_suffix=CI",
-                      "canvas.host=asdf", "lti.errorcontact.name=asdf", "lti.errorcontact.link=asdf",
+        properties = {"oauth.tokenprovider.url=http://foo", "lms.rabbitmq.queue_env_suffix=CI", "canvas.token=asdf",
+                      "canvas.host=asdf", "lti.errorcontact.name=asdf", "lti.errorcontact.link=asdf", "catalog.token=asdf",
                       "spring.rabbitmq.listener.simple.auto-startup=false", "lms.swagger.cors.origin=123"})
 @AutoConfigureMockMvc
 @ActiveProfiles({"etext", "it12", "swagger"})
@@ -90,25 +89,25 @@ public class ETextItLoggingTest {
     @Autowired
     private MockMvc mvc;
 
-    @MockBean
+    @MockitoBean
     private ETextService eTextService;
 
-    @MockBean
+    @MockitoBean
     private CourseSessionService courseSessionService;
 
-    @MockBean
+    @MockitoBean
     private DefaultInstructorRoleRepository defaultInstructorRoleRepository;
 
-    @MockBean
+    @MockitoBean
     private ClientRegistrationRepository clientRegistrationRepository;
 
-    @MockBean
+    @MockitoBean
     private BufferingApplicationStartup bufferingApplicationStartup;
 
-    @MockBean
+    @MockitoBean
     private NamesRoleService namesRoleService;
 
-    @MockBean
+    @MockitoBean
     private CorsSwaggerConfig corsSwaggerConfig;
 
     @Autowired
