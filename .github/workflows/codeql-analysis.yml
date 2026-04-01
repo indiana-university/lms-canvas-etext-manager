@@ -38,13 +38,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-<<<<<<< tps_updates
       - name: Set up JDK 25
-        uses: actions/setup-java@v4
-=======
-      - name: Set up JDK 21
         uses: actions/setup-java@v5
->>>>>>> main
         with:
           java-version: '25'
           distribution: 'temurin'
