@@ -17,7 +17,9 @@ jobs:
     with:
       java_version: 25
       token: ${{ secrets.LMS_GH_TOKEN }}
-    secrets: inherit
+#    secrets: inherit
+    secrets:
+      LMS_GIT_CONFIG: ${{ secrets.LMS_GIT_CONFIG }}
 
 #    runs-on: ubuntu-latest
 #    steps:

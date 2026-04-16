@@ -53,14 +53,13 @@ jobs:
       java_version: 25
       server_env: ${{ github.event.inputs.server_env }}
       helm_deployer_branch: ${{ github.event.inputs.helm_deployer_branch }}
-      token: ${{ secrets.LMS_GH_TOKEN }}
-    secrets: inherit
-#    secrets:
-#      LMS_MAVEN_SETTINGS: ${{ secrets.LMS_MAVEN_SETTINGS }}
-#      LMS_GH_TOKEN: ${{ secrets.LMS_GH_TOKEN }}
-#      LMS_REGISTRY_USERNAME: ${{ secrets.LMS_REGISTRY_USERNAME }}
-#      LMS_REGISTRY_PASSWORD: ${{ secrets.LMS_REGISTRY_PASSWORD }}
-#      LMS_KUBECONFIG_DEPLOYER: ${{ secrets.LMS_KUBECONFIG_DEPLOYER }}
+#    secrets: inherit
+    secrets:
+      LMS_MAVEN_SETTINGS: ${{ secrets.LMS_MAVEN_SETTINGS }}
+      LMS_GH_TOKEN: ${{ secrets.LMS_GH_TOKEN }}
+      LMS_REGISTRY_USERNAME: ${{ secrets.LMS_REGISTRY_USERNAME }}
+      LMS_REGISTRY_PASSWORD: ${{ secrets.LMS_REGISTRY_PASSWORD }}
+      LMS_KUBECONFIG_DEPLOYER: ${{ secrets.LMS_KUBECONFIG_DEPLOYER }}
 
 #    name: Maven Build
 #    runs-on: self-hosted
