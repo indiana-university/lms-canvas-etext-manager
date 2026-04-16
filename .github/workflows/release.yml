@@ -16,6 +16,7 @@ jobs:
     uses: iu-uits-lt/lms-githubaction-library/.github/workflows/release.yml@v1
     with:
       java_version: 25
+      token: ${{ secrets.LMS_GH_TOKEN }}
     secrets: inherit
 
 #    runs-on: ubuntu-latest

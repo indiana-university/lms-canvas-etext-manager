@@ -24,7 +24,7 @@ jobs:
     with:
       java_version: 25
       languages: "[ 'java', 'javascript' ]"
-    secrets: inherit
+#    secrets: inherit
 
 #    name: Analyze
 #    runs-on: ubuntu-latest

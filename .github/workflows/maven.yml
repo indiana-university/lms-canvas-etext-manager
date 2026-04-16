@@ -28,4 +28,4 @@ jobs:
     uses: iu-uits-lt/lms-githubaction-library/.github/workflows/maven.yml@v1
     with:
       java_version: 25
-    secrets: inherit
+#    secrets: inherit
